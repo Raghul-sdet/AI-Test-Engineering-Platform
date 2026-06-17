@@ -3,7 +3,6 @@ pipeline {
     
     tools {
         maven 'Maven3' 
-        // Perfectly matched to your local Windows Java folder
         jdk 'jdk-17.0.12'   
     }
 
@@ -14,16 +13,23 @@ pipeline {
             }
         }
         
+        // --- NEW DIAGNOSTIC STAGE ---
+        stage('Diagnostics') {
+            steps {
+                bat 'echo %JAVA_HOME%'
+                bat 'java -version'
+                bat 'mvn.cmd -version'
+            }
+        }
+        
         stage('Clean Workspace') {
             steps {
-                // Windows-specific Maven command
                 bat 'mvn.cmd clean'
             }
         }
         
         stage('Execute Regression Suite') {
             steps {
-                // Windows-specific Maven command
                 bat 'mvn.cmd test -DsuiteXmlFile=regression-suite.xml'
             }
         }
