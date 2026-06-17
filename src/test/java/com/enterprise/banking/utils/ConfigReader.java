@@ -1,5 +1,6 @@
 package com.enterprise.banking.utils;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -8,20 +9,25 @@ public class ConfigReader {
     private static Properties properties;
 
     static {
-        // Use the ClassLoader to find the file in the classpath
-        // This works even when running inside Jenkins target/test-classes
-        try (InputStream input = ConfigReader.class.getClassLoader().getResourceAsStream("config.properties")) {
-            
-            if (input == null) {
-                throw new RuntimeException("Sorry, unable to find config.properties in the classpath!");
+        properties = new Properties();
+        // 1. Try Classpath (Standard Maven way)
+        InputStream input = ConfigReader.class.getClassLoader().getResourceAsStream("config.properties");
+        
+        // 2. If Classpath fails, try physical file path in the workspace
+        if (input == null) {
+            try {
+                String path = System.getProperty("user.dir") + "/src/test/resources/config.properties";
+                input = new FileInputStream(path);
+            } catch (IOException e) {
+                throw new RuntimeException("CRITICAL: Could not find config.properties in classpath OR at " + System.getProperty("user.dir") + "/src/test/resources/config.properties");
             }
-            
-            properties = new Properties();
+        }
+
+        try {
             properties.load(input);
-            
+            input.close();
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error loading configuration properties");
+            throw new RuntimeException("Error reading config.properties");
         }
     }
 
