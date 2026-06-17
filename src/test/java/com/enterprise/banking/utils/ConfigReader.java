@@ -1,27 +1,27 @@
 package com.enterprise.banking.utils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigReader {
     private static Properties properties;
 
     static {
-        try {
-            // CRITICAL JENKINS FIX:
-            // Use System.getProperty("user.dir") to dynamically find the project root directory
-            // This works flawlessly on both Local Eclipse and Jenkins Cloud Server
-            String path = System.getProperty("user.dir") + "/src/test/resources/config.properties";
+        // Use the ClassLoader to find the file in the classpath
+        // This works even when running inside Jenkins target/test-classes
+        try (InputStream input = ConfigReader.class.getClassLoader().getResourceAsStream("config.properties")) {
             
-            FileInputStream fis = new FileInputStream(path);
+            if (input == null) {
+                throw new RuntimeException("Sorry, unable to find config.properties in the classpath!");
+            }
+            
             properties = new Properties();
-            properties.load(fis);
-            fis.close();
+            properties.load(input);
             
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to load config.properties file from path: " + System.getProperty("user.dir") + "/src/test/resources/config.properties");
+            throw new RuntimeException("Error loading configuration properties");
         }
     }
 
