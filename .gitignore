@@ -1,0 +1,15 @@
+# Maven and Output Folders
+target/
+test-output/
+
+# Eclipse/IDE Settings
+.settings/
+.classpath
+.project
+.idea/
+*.iml
+*.class
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
