@@ -1,10 +1,10 @@
 pipeline {
     agent any
     
-    
     tools {
         maven 'Maven3' 
-        jdk 'JDK17'
+        // Perfectly matched to your local Windows Java folder
+        jdk 'jdk-17.0.12'   
     }
 
     stages {
@@ -16,14 +16,14 @@ pipeline {
         
         stage('Clean Workspace') {
             steps {
-                // CRITICAL FIX: Using 'mvn.cmd' instead of 'mvn' for Windows environments
+                // Windows-specific Maven command
                 bat 'mvn.cmd clean'
             }
         }
         
         stage('Execute Regression Suite') {
             steps {
-                // CRITICAL FIX: Using 'mvn.cmd' to trigger the TestNG XML
+                // Windows-specific Maven command
                 bat 'mvn.cmd test -DsuiteXmlFile=regression-suite.xml'
             }
         }
@@ -31,7 +31,6 @@ pipeline {
     
     post {
         always {
-            // Safely extracts your Dark Theme Extent Report to the Jenkins dashboard
             archiveArtifacts artifacts: 'test-output/AutomationReport.html', allowEmptyArchive: true
         }
     }
