@@ -4,64 +4,39 @@ import com.enterprise.banking.utils.ConfigReader;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-
 import java.time.Duration;
 
 public class BaseTest {
-
-    // ThreadLocal ensures thread safety for parallel execution in CI/CD
-    protected static ThreadLocal<WebDriver> threadLocalDriver = new ThreadLocal<>();
-    
-    // CRITICAL FIX: Re-adding the protected driver variable so existing tests compile perfectly
-    protected WebDriver driver;
+    public static WebDriver driver;
 
     @BeforeMethod
     public void setUp() {
-        String browser = ConfigReader.getProperty("browser").toLowerCase();
-        boolean isHeadless = Boolean.parseBoolean(ConfigReader.getProperty("headless"));
-
-        WebDriver localDriver;
-
-        switch (browser) {
-            case "firefox":
-                localDriver = new FirefoxDriver();
-                break;
-            case "edge":
-                localDriver = new EdgeDriver();
-                break;
-            case "chrome":
-            default:
-                ChromeOptions options = new ChromeOptions();
-                if (isHeadless) options.addArguments("--headless=new");
-                localDriver = new ChromeDriver(options);
-                break;
-        }
-
-        int implicitWait = Integer.parseInt(ConfigReader.getProperty("implicitWait"));
-        localDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
-        localDriver.manage().window().maximize();
-        localDriver.get(ConfigReader.getProperty("baseUrl") + "index.htm");
-
-        // Set the ThreadLocal driver
-        threadLocalDriver.set(localDriver);
+        // Setup Chrome Options for Jenkins/Headless environment
+        ChromeOptions options = new ChromeOptions();
         
-        // Map it back to the standard driver variable for backward compatibility
-        driver = getDriver();
-    }
+        // This makes the browser invisible so it can run on a server
+        options.addArguments("--headless=new"); 
+        // Essential for Linux/Server environments like Jenkins
+        options.addArguments("--no-sandbox"); 
+        // Prevents memory issues in containerized environments
+        options.addArguments("--disable-dev-shm-usage"); 
+        options.addArguments("--window-size=1920,1080");
 
-    public static WebDriver getDriver() {
-        return threadLocalDriver.get();
+        // Initialize the driver
+        driver = new ChromeDriver(options);
+        
+        // Load configuration and set timeouts
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(Long.parseLong(ConfigReader.getProperty("implicitWait"))));
+        driver.manage().window().maximize();
+        driver.get(ConfigReader.getProperty("baseUrl"));
     }
 
     @AfterMethod
     public void tearDown() {
-        if (getDriver() != null) {
-            getDriver().quit();
-            threadLocalDriver.remove();
+        if (driver != null) {
+            driver.quit();
         }
     }
 }
