@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Enterprise Banking API Test Suite" verbose="1">
+
+    <listeners>
+        <listener class-name="com.enterprise.banking.listeners.TestListener"/>
+    </listeners>
+
+    <test name="Customer API Endpoints">
+        <classes>
+            <class name="com.enterprise.banking.api.tests.CreateCustomerTest"/>
+            <class name="com.enterprise.banking.api.tests.GetCustomerDetailsTest"/>
+        </classes>
+    </test>
+
+    <test name="Account and Transaction API Endpoints">
+        <classes>
+            <class name="com.enterprise.banking.api.tests.OpenAccountApiTest"/>
+            <class name="com.enterprise.banking.api.tests.TransferFundsApiTest"/>
+            <class name="com.enterprise.banking.api.tests.GetTransactionHistoryTest"/>
+        </classes>
+    </test>
+
+</suite>

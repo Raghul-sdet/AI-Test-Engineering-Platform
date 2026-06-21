@@ -14,7 +14,9 @@ import org.testng.ITestResult;
 public class TestListener implements ITestListener {
 
     private static ExtentReports extent = ExtentManager.createInstance();
-    private static ThreadLocal<ExtentTest> test = new ThreadLocal<>();
+    
+    // Updated to public static so RestAssuredListener can access the thread-safe ExtentTest instance
+    public static ThreadLocal<ExtentTest> test = new ThreadLocal<>();
 
     @Override
     public void onTestStart(ITestResult result) {
