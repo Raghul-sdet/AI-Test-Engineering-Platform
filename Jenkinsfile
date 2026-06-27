@@ -7,37 +7,44 @@ pipeline {
     }
 
     stages {
-        stage('Checkout from GitHub') {
+        stage('Checkout Source') {
             steps {
                 checkout scm
             }
         }
         
-        // --- NEW DIAGNOSTIC STAGE ---
-        stage('Diagnostics') {
+        stage('Cleanup Previous Docker Environment') {
             steps {
-                bat 'echo %JAVA_HOME%'
-                bat 'java -version'
-                bat 'mvn.cmd -version'
+                // Ensure no stale containers or volume locks from previous runs
+                bat 'docker compose down --volumes --remove-orphans || true'
             }
         }
         
-        stage('Clean Workspace') {
+        stage('Build Docker Image') {
             steps {
-                bat 'mvn.cmd clean'
+                // Build the containerized image from your Dockerfile
+                bat 'docker build -t enterprise-framework .'
             }
         }
         
-        stage('Execute Regression Suite') {
+        stage('Execute Dockerized Test Suite') {
             steps {
-                bat 'mvn.cmd test -DsuiteXmlFile=regression-suite.xml'
+                // --abort-on-container-exit: Jenkins waits here, failing the stage if tests fail
+                bat 'docker compose up --abort-on-container-exit'
             }
         }
     }
     
     post {
         always {
-            archiveArtifacts artifacts: 'test-output/AutomationReport.html', allowEmptyArchive: true
+            // Stage: Archive Artifacts (Collect Excel report and any legacy HTML reports)
+            archiveArtifacts artifacts: 'target/reports/*.xlsx, test-output/AutomationReport.html', allowEmptyArchive: true
+            
+            // Stage: Publish Test Results (Display TestNG trends in Jenkins UI)
+            testng reportFilenamePattern: '**/testng-results.xml'
+            
+            // Stage: Docker Cleanup (Always reclaim disk space)
+            bat 'docker compose down --volumes'
         }
     }
 }

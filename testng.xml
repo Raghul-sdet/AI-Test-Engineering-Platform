@@ -12,7 +12,6 @@
             <class name="com.enterprise.banking.tests.AccountOverviewTest"/>
             <class name="com.enterprise.banking.tests.TransferFundsTest"/>
             <class name="com.enterprise.banking.tests.OpenAccountTest"/>
-            
             <class name="com.enterprise.banking.tests.FindTransactionsTest"/>
         </classes>
     </test>

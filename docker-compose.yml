@@ -1,0 +1,52 @@
+services:
+  # 1. Selenium Grid Hub (The Orchestrator)
+  selenium-hub:
+    image: selenium/hub:4.18.1-20240224
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+
+  # 2. Chrome Node
+  chrome-node:
+    image: selenium/node-chrome:4.18.1-20240224
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+
+  # 3. Firefox Node
+  firefox-node:
+    image: selenium/node-firefox:4.18.1-20240224
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+
+  # 4. Edge Node
+  edge-node:
+    image: selenium/node-edge:4.18.1-20240224
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+
+  # 5. Your Existing Test Automation Container
+  automation-tests:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: enterprise-framework:latest
+    container_name: qa-automation-container
+    depends_on:
+      - selenium-hub
+    volumes:
+      - ./target/reports:/usr/src/app/target/reports

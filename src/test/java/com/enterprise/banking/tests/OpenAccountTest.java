@@ -8,21 +8,23 @@ import com.enterprise.banking.pages.OpenAccountPage;
 
 public class OpenAccountTest extends BaseTest {
 
-    // CRITICAL UPDATE: Signature now accepts all 6 DataProvider parameters
-    @Test(dataProvider = "Login data", dataProviderClass = com.enterprise.banking.utils.ExcelUtils.class)
+    // CRITICAL PHASE 3 CUTOVER: Pointing specifically to the new H2DataProvider
+    @Test(dataProvider = "h2-login-data", dataProviderClass = com.enterprise.banking.utils.H2DataProvider.class)
     public void verifyOpenNewAccountWorkflow(String username, String password, String transferAmount, 
                                              String searchAmount, String searchDate, String searchTransId) {
         
         System.out.println(">>> Executing Open Account Test for user: " + username);
 
         // Step 1: Login
-        LoginPage loginPage = new LoginPage(driver);
+        // FIX: Replaced 'driver' with 'getDriver()' for Thread-Safety
+        LoginPage loginPage = new LoginPage(getDriver());
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
 
         // Step 2: Initialize Page Object
-        OpenAccountPage openAccountPage = new OpenAccountPage(driver);
+        // FIX: Replaced 'driver' with 'getDriver()'
+        OpenAccountPage openAccountPage = new OpenAccountPage(getDriver());
 
         // Step 3: Execute Open Account Workflow
         openAccountPage.navigateToOpenNewAccount();

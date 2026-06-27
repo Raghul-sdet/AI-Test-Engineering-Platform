@@ -8,21 +8,23 @@ import com.enterprise.banking.pages.LoginPage;
 
 public class AccountOverviewTest extends BaseTest {
 
-    // CRITICAL UPDATE: The method signature now perfectly matches the 6 columns in TestData.xlsx
-    @Test(dataProvider = "Login data", dataProviderClass = com.enterprise.banking.utils.ExcelUtils.class)
+    // CRITICAL PHASE 2 CUTOVER: Pointing specifically to the new H2DataProvider
+    @Test(dataProvider = "h2-login-data", dataProviderClass = com.enterprise.banking.utils.H2DataProvider.class)
     public void verifyAccountOverviewAndBalance(String username, String password, String transferAmount, 
                                                 String searchAmount, String searchDate, String searchTransId) {
         
         System.out.println(">>> Executing Account Overview Test for user: " + username);
 
         // Step 1: Login (Parabank automatically redirects to Overview upon success)
-        LoginPage loginPage = new LoginPage(driver);
+        // FIX: Replaced 'driver' with 'getDriver()' for Thread-Safe Parallel Execution
+        LoginPage loginPage = new LoginPage(getDriver());
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
 
         // Step 2: Initialize Overview Page 
-        AccountOverviewPage overviewPage = new AccountOverviewPage(driver);
+        // FIX: Replaced 'driver' with 'getDriver()'
+        AccountOverviewPage overviewPage = new AccountOverviewPage(getDriver());
 
         // Step 3: Validate Balance
         String balance = overviewPage.getAccountBalance();

@@ -4,11 +4,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.enterprise.banking.pages.RegistrationPage;
-import com.enterprise.banking.utils.ExcelWriteUtils;
+import com.enterprise.banking.repositories.UserRepository;
 import com.enterprise.banking.utils.RandomDataGenerator;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 public class RegistrationTest extends BaseTest {
 
@@ -22,7 +19,7 @@ public class RegistrationTest extends BaseTest {
         System.out.println(">>> Attempting registration with Username: " + newUsername);
 
         // Step 2: Initialize Page Object
-        RegistrationPage registrationPage = new RegistrationPage(driver);
+        RegistrationPage registrationPage = new RegistrationPage(getDriver());
 
         // Step 3: Execute Registration UI Workflow
         registrationPage.navigateToRegistration();
@@ -34,22 +31,9 @@ public class RegistrationTest extends BaseTest {
         Assert.assertTrue(actualSuccessMessage.contains("Welcome"), 
                 "Assertion Failed: Registration success message did not display the expected text.");
 
-        // Step 5: Save verified credentials back to Excel with default test parameters
-        String excelPath = "src/test/resources/TestData.xlsx";
-        String sheetName = "Login data"; 
-        
-        String defaultTransferAmount = "50"; 
-        String defaultSearchAmount = "50"; // We search for 50 because we transfer 50
-        
-        // Dynamically get today's date in MM-DD-YYYY format for Parabank
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
-        String todayDate = LocalDate.now().format(formatter);
-        
-        String emptyTransactionId = ""; // Leave empty; it will skip this specific search in the test
-        
-        // CRITICAL FIX: Pass all 8 required arguments to the utility
-        ExcelWriteUtils.appendCredentialsToExcel(excelPath, sheetName, newUsername, newPassword, 
-                defaultTransferAmount, defaultSearchAmount, todayDate, emptyTransactionId);
+        // Step 5: Save verified credentials directly to the H2 Database
+        UserRepository.saveUser(newUsername, newPassword);
+        System.out.println(">>> H2 Database Save Complete.");
         
         System.out.println(">>> Execution Complete. Next suite run will automatically test user: " + newUsername);
     }

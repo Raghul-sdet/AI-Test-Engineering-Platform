@@ -8,20 +8,23 @@ import com.enterprise.banking.pages.LoginPage;
 
 public class FindTransactionsTest extends BaseTest {
 
-    @Test(dataProvider = "Login data", dataProviderClass = com.enterprise.banking.utils.ExcelUtils.class)
+    // CRITICAL PHASE 3 CUTOVER: Pointing specifically to the new H2DataProvider
+    @Test(dataProvider = "h2-login-data", dataProviderClass = com.enterprise.banking.utils.H2DataProvider.class)
     public void verifyFindTransactionsWorkflow(String username, String password, String transferAmount, 
                                                String searchAmount, String searchDate, String searchTransId) {
         
         System.out.println(">>> Executing Find Transactions Test for user: " + username);
 
         // Step 1: Login
-        LoginPage loginPage = new LoginPage(driver);
+        // FIX: Replaced 'driver' with 'getDriver()' for Thread-Safety
+        LoginPage loginPage = new LoginPage(getDriver());
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
 
         // Step 2: Initialize Page Object
-        FindTransactionsPage findTransPage = new FindTransactionsPage(driver);
+        // FIX: Replaced 'driver' with 'getDriver()'
+        FindTransactionsPage findTransPage = new FindTransactionsPage(getDriver());
 
         // Step 3: Validate Search by Amount
         if (searchAmount != null && !searchAmount.isEmpty()) {

@@ -17,12 +17,9 @@ public class LoginPage {
     private By usernameField = By.name("username");
     private By passwordField = By.name("password");
     private By loginButton = By.xpath("//input[@value='Log In']");
-
-    // Success Page
     private By accountOverviewHeader = By.xpath("//h1[@class='title']");
-
-    // Error Message
     private By errorMessage = By.className("error");
+    private By logoutLink = By.linkText("Log Out");
 
     // Constructor
     public LoginPage(WebDriver driver) {
@@ -32,9 +29,7 @@ public class LoginPage {
 
     // Actions
     public void enterUsername(String username) {
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(usernameField))
-                .sendKeys(username);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(usernameField)).sendKeys(username);
     }
 
     public void enterPassword(String password) {
@@ -51,16 +46,21 @@ public class LoginPage {
         clickLogin();
     }
 
+    // Added for Hybrid E2E Test Compatibility
+    public void login(String username, String password) {
+        loginToBanking(username, password);
+    }
+
+    // Added for Hybrid E2E Test Compatibility
+    public void logout() {
+        wait.until(ExpectedConditions.elementToBeClickable(logoutLink)).click();
+    }
+
     // Verify successful login
     public boolean isOverviewDisplayed() {
         try {
-
-            WebElement header = wait.until(
-                    ExpectedConditions.visibilityOfElementLocated(
-                            accountOverviewHeader));
-
+            WebElement header = wait.until(ExpectedConditions.visibilityOfElementLocated(accountOverviewHeader));
             return header.isDisplayed();
-
         } catch (Exception e) {
             return false;
         }
@@ -69,13 +69,8 @@ public class LoginPage {
     // Verify invalid login
     public String getErrorMessage() {
         try {
-
-            WebElement error = wait.until(
-                    ExpectedConditions.visibilityOfElementLocated(
-                            errorMessage));
-
+            WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(errorMessage));
             return error.getText();
-
         } catch (Exception e) {
             return "";
         }

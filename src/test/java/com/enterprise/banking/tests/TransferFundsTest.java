@@ -8,21 +8,23 @@ import com.enterprise.banking.pages.TransferFundsPage;
 
 public class TransferFundsTest extends BaseTest {
 
-    // CRITICAL UPDATE: Signature now accepts all 6 DataProvider parameters
-    @Test(dataProvider = "Login data", dataProviderClass = com.enterprise.banking.utils.ExcelUtils.class)
+    // CRITICAL PHASE 3 CUTOVER: Pointing specifically to the new H2DataProvider
+    @Test(dataProvider = "h2-login-data", dataProviderClass = com.enterprise.banking.utils.H2DataProvider.class)
     public void verifyFundTransferWorkflow(String username, String password, String transferAmount, 
                                            String searchAmount, String searchDate, String searchTransId) {
         
         System.out.println(">>> Executing Transfer Funds Test for user: " + username);
 
-        // Step 1: Login with Excel Credentials
-        LoginPage loginPage = new LoginPage(driver);
+        // Step 1: Login with Database Credentials
+        // FIX: Replaced 'driver' with 'getDriver()' for Thread-Safety
+        LoginPage loginPage = new LoginPage(getDriver());
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
 
         // Step 2: Initialize Page Object
-        TransferFundsPage transferPage = new TransferFundsPage(driver);
+        // FIX: Replaced 'driver' with 'getDriver()'
+        TransferFundsPage transferPage = new TransferFundsPage(getDriver());
 
         // Step 3: Execute Transfer Workflow
         transferPage.navigateToTransferFunds();

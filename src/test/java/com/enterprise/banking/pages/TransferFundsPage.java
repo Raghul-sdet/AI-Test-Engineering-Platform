@@ -31,7 +31,6 @@ public class TransferFundsPage {
     @FindBy(xpath = "//input[@value='Transfer']")
     private WebElement btnTransferSubmit;
 
-    // Locates the success header exclusively inside the showResult div
     @FindBy(xpath = "//div[@id='showResult']//h1[@class='title']")
     private WebElement textSuccessHeader;
 
@@ -58,8 +57,6 @@ public class TransferFundsPage {
 
     public void selectFromAccountByIndex(int index) {
         wait.until(ExpectedConditions.visibilityOf(dropdownFromAccountId));
-        
-        // Explicit Wait: Force script to pause until AJAX populates the fromAccount options
         wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
                 By.xpath("//select[@id='fromAccountId']/option"), 0));
                 
@@ -69,8 +66,6 @@ public class TransferFundsPage {
 
     public void selectToAccountByIndex(int index) {
         wait.until(ExpectedConditions.visibilityOf(dropdownToAccountId));
-        
-        // Explicit Wait: Force script to pause until AJAX populates the toAccount options
         wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
                 By.xpath("//select[@id='toAccountId']/option"), 0));
                 
@@ -84,7 +79,6 @@ public class TransferFundsPage {
 
     public boolean isTransferComplete() {
         try {
-            // Wait specifically for the AJAX POST to return and display the hidden result div
             wait.until(ExpectedConditions.visibilityOf(textSuccessHeader));
             return textSuccessHeader.getText().equals("Transfer Complete!");
         } catch (Exception e) {
@@ -99,5 +93,24 @@ public class TransferFundsPage {
 
     public void clickLogout() {
         wait.until(ExpectedConditions.elementToBeClickable(btnLogout)).click();
+    }
+
+    // --- Added for Hybrid E2E Test ---
+    
+    public void executeTransfer(String amount, String fromAcc, String toAcc) {
+        enterTransferAmount(amount);
+
+        // Wait for dropdowns to populate from backend
+        wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
+                By.xpath("//select[@id='fromAccountId']/option"), 0));
+        Select fromAccount = new Select(dropdownFromAccountId);
+        fromAccount.selectByVisibleText(fromAcc);
+
+        wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
+                By.xpath("//select[@id='toAccountId']/option"), 0));
+        Select toAccount = new Select(dropdownToAccountId);
+        toAccount.selectByVisibleText(toAcc);
+
+        clickTransfer();
     }
 }

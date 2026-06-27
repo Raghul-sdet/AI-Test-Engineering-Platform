@@ -1,0 +1,14 @@
+# Ignore target folder to ensure a pristine build inside the container
+target/
+
+# Ignore IDE specific files
+.idea/
+.eclipse/
+*.iml
+.settings/
+.classpath
+.project
+
+# Ignore Git history to save image space
+.git/
+.gitignore
