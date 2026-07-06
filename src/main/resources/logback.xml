@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration>
+<!-- Enterprise Logback Configuration for QA Automation Framework -->
+<!-- Kept structurally flat to prevent strict IDE Language Server external fetch warnings -->
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Suppress verbose internal Selenium and Netty logs -->
+    <logger name="org.openqa.selenium" level="WARN" />
+    <logger name="io.netty" level="WARN" />
+
+    <!-- Root logger configured for framework execution -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+</configuration>

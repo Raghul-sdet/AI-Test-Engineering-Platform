@@ -17,20 +17,30 @@
         
         <allure.version>2.27.0</allure.version>
         <aspectj.version>1.9.22.1</aspectj.version>
+        <!-- Centralized versions for cleanup -->
+        <selenium.version>4.22.0</selenium.version>
+        <slf4j.version>2.0.13</slf4j.version>
+        <logback.version>1.5.6</logback.version>
     </properties>
 
     <dependencies>
+        <!-- Selenium WebDriver (Upgraded to fix Chrome CDP warnings) -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.18.1</version>
+            <version>${selenium.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>7.9.0</version>
-            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>1.13.0</version>
         </dependency>
         
         <dependency>
@@ -63,26 +73,47 @@
             <scope>test</scope>
         </dependency>
         
+        <!-- H2 Database (Test scope removed so src/main/java can access it) -->
         <dependency>
-   			<groupId>com.h2database</groupId>
-    		<artifactId>h2</artifactId>
-    		<version>2.2.224</version>
-    		<scope>test</scope>
-		</dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+        </dependency>
         
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.17.0</version>
         </dependency>
+
+        <!-- SLF4J API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Logback Implementation (Fixes SLF4J Defaulting to NOP Logger warning) -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
-    	<resources>
+        <resources>
             <resource>
                 <directory>src/test/resources</directory>
                 <includes>
                     <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+            <!-- Included src/main/resources to ensure logback.xml is picked up -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
                     <include>**/*.xml</include>
                 </includes>
             </resource>
@@ -98,10 +129,10 @@
                 </configuration>
             </plugin>
             <plugin>
-					<groupId>org.sonarsource.scanner.maven</groupId>
-    				<artifactId>sonar-maven-plugin</artifactId>
-    				<version>4.0.0.4121</version>
-			</plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>4.0.0.4121</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

@@ -1,77 +1,73 @@
 package com.enterprise.banking.listeners;
 
-import com.aventstack.extentreports.ExtentReports;
-import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.MediaEntityBuilder;
-import com.aventstack.extentreports.Status;
-import com.enterprise.banking.tests.BaseTest;
-import com.enterprise.banking.utils.AllureUtils;
-import com.enterprise.banking.utils.ScreenshotUtils;
+import com.enterprise.banking.utils.DriverManager;
+
+import io.qameta.allure.Attachment;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
+/**
+ * Enterprise TestNG Listener for unified reporting and execution monitoring.
+ * Hooks into the test lifecycle to capture screenshots on failure safely via ThreadLocal WebDriver.
+ */
 public class TestListener implements ITestListener {
 
-    private static ExtentReports extent = ExtentManager.createInstance();
-    public static ThreadLocal<ExtentTest> test = new ThreadLocal<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestListener.class);
 
     @Override
-    public synchronized void onTestStart(ITestResult result) {
-        // Initialize ExtentTest instance
-        ExtentTest extentTest = extent.createTest(result.getMethod().getMethodName());
-        test.set(extentTest);
+    public void onTestStart(ITestResult result) {
+        LOGGER.info("Starting Test Execution: {}", result.getMethod().getMethodName());
     }
 
     @Override
-    public synchronized void onTestSuccess(ITestResult result) {
-        test.get().log(Status.PASS, "Test Passed Successfully");
+    public void onTestSuccess(ITestResult result) {
+        LOGGER.info("Test Execution Passed: {}", result.getMethod().getMethodName());
     }
 
     @Override
-    public synchronized void onTestFailure(ITestResult result) {
-        // Securely fetch the specific WebDriver instance belonging to this exact failing thread
-        WebDriver driver = BaseTest.getDriver();
+    public void onTestFailure(ITestResult result) {
+        LOGGER.error("Test Execution Failed: {}", result.getMethod().getMethodName());
         
+        // Fix: Retrieve the thread-safe WebDriver directly from the static DriverManager 
+        // instead of attempting to access a non-static method from BaseTest.
+        WebDriver driver = DriverManager.getDriver();
         if (driver != null) {
-            // --- 1. Extent Reports Attachment ---
-            String base64Screenshot = ScreenshotUtils.getBase64Screenshot(driver);
-            test.get().fail("Test Failed. See screenshot below:", 
-                    MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
-            
-            // --- 2. Allure Reports Attachment ---
-            AllureUtils.saveScreenshot(driver);
-            AllureUtils.savePageSource(driver);
-            AllureUtils.saveBrowserLogs(driver);
-        }
-        
-        // Log exception in Extent Reports
-        test.get().log(Status.FAIL, "Exception: " + result.getThrowable());
-        
-        // Log exception in Allure Reports
-        if (result.getThrowable() != null) {
-            AllureUtils.saveTextLog("Test failed due to: " + result.getThrowable().getMessage());
+            saveScreenshotToAllure(driver);
+            LOGGER.info("Failure screenshot captured successfully.");
+        } else {
+            LOGGER.warn("WebDriver instance is null; unable to capture failure screenshot.");
         }
     }
 
     @Override
-    public synchronized void onTestSkipped(ITestResult result) {
-        // Log skip in Extent Reports
-        test.get().log(Status.SKIP, "Test Skipped: " + result.getThrowable());
-        
-        // Log skip in Allure Reports
-        if (result.getThrowable() != null) {
-            AllureUtils.saveTextLog("Test was skipped due to: " + result.getThrowable().getMessage());
-        }
+    public void onTestSkipped(ITestResult result) {
+        LOGGER.warn("Test Execution Skipped: {}", result.getMethod().getMethodName());
     }
 
     @Override
-    public synchronized void onFinish(ITestContext context) {
-        // Flush existing Extent Reports
-        extent.flush();
-        
-        // Generate Allure Environment properties
-        AllureUtils.generateEnvironmentDetails();
+    public void onStart(ITestContext context) {
+        LOGGER.info("Initializing TestNG Suite: {}", context.getName());
+    }
+
+    @Override
+    public void onFinish(ITestContext context) {
+        LOGGER.info("Completed TestNG Suite: {}", context.getName());
+    }
+
+    /**
+     * Captures and attaches a screenshot to the Allure report securely.
+     *
+     * @param driver The active ThreadLocal WebDriver instance.
+     * @return The raw byte array of the captured screenshot.
+     */
+    @Attachment(value = "Failure Screenshot", type = "image/png")
+    private byte[] saveScreenshotToAllure(WebDriver driver) {
+        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
     }
 }

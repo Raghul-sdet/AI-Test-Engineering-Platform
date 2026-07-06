@@ -1,15 +1,56 @@
-# Maven and Output Folders
+# ==========================
+# Maven
+# ==========================
 target/
-test-output/
+dependency-reduced-pom.xml
 
-# Eclipse/IDE Settings
+# ==========================
+# Test Reports
+# ==========================
+test-output/
+allure-results/
+allure-report/
+reports/
+logs/
+*.log
+
+# ==========================
+# Generated Files
+# ==========================
+generated-code/
+*.xlsx
+
+# (Optional)
+# Uncomment if you don't want generated reports in Git
+# AI_Test_Design.xlsx
+
+# ==========================
+# Eclipse
+# ==========================
 .settings/
 .classpath
 .project
+.factorypath
+.recommenders/
+
+# ==========================
+# IntelliJ IDEA
+# ==========================
 .idea/
 *.iml
+
+# ==========================
+# VS Code
+# ==========================
+.vscode/
+
+# ==========================
+# Java
+# ==========================
 *.class
 
-# OS Generated Files
+# ==========================
+# Operating System
+# ==========================
 .DS_Store
 Thumbs.db

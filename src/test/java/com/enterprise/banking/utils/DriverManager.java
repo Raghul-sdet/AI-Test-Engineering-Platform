@@ -3,74 +3,66 @@ package com.enterprise.banking.utils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.edge.EdgeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+/**
+ * Manages the WebDriver lifecycle using ThreadLocal for thread-safe parallel execution.
+ * Updated to adhere to Selenium 4 standard practices, eliminating deprecated DesiredCapabilities.
+ */
+public final class DriverManager {
 
-public class DriverManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DriverManager.class);
+    private static final ThreadLocal<WebDriver> DRIVER_THREAD_LOCAL = new ThreadLocal<>();
 
     /**
-     * Factory method to initialize the WebDriver based on execution mode (Local or Grid).
-     * @param browser The browser name (chrome, firefox, edge)
-     * @param isHeadless Boolean to determine if headless mode should be used
-     * @param executionMode The mode of execution (local or grid)
-     * @param gridUrl The Selenium Grid Hub URL
-     * @return WebDriver instance (Local or Remote)
+     * Private constructor to prevent instantiation of utility class.
      */
-    public static WebDriver createDriver(String browser, boolean isHeadless, String executionMode, String gridUrl) {
-        WebDriver driver = null;
-        boolean isGrid = executionMode.trim().equalsIgnoreCase("grid");
+    private DriverManager() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated.");
+    }
 
-        try {
-            switch (browser.toLowerCase()) {
-                case "firefox":
-                    FirefoxOptions firefoxOptions = new FirefoxOptions();
-                    if (isHeadless) firefoxOptions.addArguments("--headless");
-                    
-                    if (isGrid) {
-                        driver = new RemoteWebDriver(new URL(gridUrl), firefoxOptions);
-                    } else {
-                        driver = new FirefoxDriver(firefoxOptions);
-                    }
-                    break;
-                    
-                case "edge":
-                    EdgeOptions edgeOptions = new EdgeOptions();
-                    if (isHeadless) edgeOptions.addArguments("--headless");
-                    
-                    if (isGrid) {
-                        driver = new RemoteWebDriver(new URL(gridUrl), edgeOptions);
-                    } else {
-                        driver = new EdgeDriver(edgeOptions);
-                    }
-                    break;
-                    
-                case "chrome":
-                default:
-                    ChromeOptions chromeOptions = new ChromeOptions();
-                    if (isHeadless) chromeOptions.addArguments("--headless=new");
-                    
-                    // Enterprise arguments to prevent memory crashes in Docker
-                    chromeOptions.addArguments("--disable-dev-shm-usage"); 
-                    chromeOptions.addArguments("--no-sandbox");
-                    
-                    if (isGrid) {
-                        driver = new RemoteWebDriver(new URL(gridUrl), chromeOptions);
-                    } else {
-                        driver = new ChromeDriver(chromeOptions);
-                    }
-                    break;
-            }
-        } catch (MalformedURLException e) {
-            // Fails the test immediately if the URL format in config.properties is invalid
-            throw new RuntimeException("CRITICAL: Invalid Selenium Grid URL provided: " + gridUrl, e);
+    /**
+     * Retrieves the active WebDriver instance for the current execution thread.
+     *
+     * @return Thread-safe WebDriver instance.
+     */
+    public static WebDriver getDriver() {
+        return DRIVER_THREAD_LOCAL.get();
+    }
+
+    /**
+     * Initializes the WebDriver with modern ChromeOptions.
+     * Leverages Selenium 4's built-in Selenium Manager for binary resolution.
+     */
+    public static void setDriver() {
+        if (DRIVER_THREAD_LOCAL.get() == null) {
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments("--remote-allow-origins=*");
+            options.addArguments("--start-maximized");
+            // Headless mode can be injected here via environment variables if required for CI/CD
+
+            WebDriver driver = new ChromeDriver(options);
+            DRIVER_THREAD_LOCAL.set(driver);
+            LOGGER.debug("WebDriver initialized successfully for thread ID: {}", Thread.currentThread().getId());
         }
-        
-        return driver;
+    }
+
+    /**
+     * Terminates the WebDriver and forcefully clears the ThreadLocal variable
+     * to prevent JVM memory leaks during large suite executions.
+     */
+    public static void quitDriver() {
+        WebDriver driver = DRIVER_THREAD_LOCAL.get();
+        if (driver != null) {
+            try {
+                driver.quit();
+            } catch (Exception exception) {
+                LOGGER.warn("Exception encountered during driver teardown: {}", exception.getMessage());
+            } finally {
+                DRIVER_THREAD_LOCAL.remove();
+                LOGGER.debug("ThreadLocal driver reference removed for thread ID: {}", Thread.currentThread().getId());
+            }
+        }
     }
 }

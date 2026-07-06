@@ -1,72 +1,54 @@
 package com.enterprise.banking.tests;
 
-import com.enterprise.banking.repositories.UserRepository;
-import com.enterprise.banking.utils.ConfigReader;
 import com.enterprise.banking.utils.DriverManager;
-import com.enterprise.banking.utils.ReportGenerator;
-import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Optional;
-import org.testng.annotations.Parameters;
 
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+
+import java.time.Duration;
+
+/**
+ * Foundational test configuration class.
+ * Manages the setup and teardown routines utilizing the thread-safe DriverManager.
+ */
 public class BaseTest {
 
-    // This is the variable all your test classes (LoginPage, etc.) need
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseTest.class);
     protected WebDriver driver;
-    
-    // ThreadLocal for parallel execution safety
-    private static ThreadLocal<WebDriver> driverLocal = new ThreadLocal<>();
 
-    public static WebDriver getDriver() {
-        return driverLocal.get();
-    }
-
-    // PHASE 1: Initialize H2 Database Schema before any tests run
-    @BeforeSuite(alwaysRun = true)
-    public void setupGlobalFramework() {
-        System.out.println(">>> Executing Pre-Suite Setup...");
-        UserRepository.initializeSchema();
-    }
-
-    @Parameters("browser")
+    /**
+     * Configures the test environment prior to execution.
+     * Implements modern Selenium 4 implicit wait configurations.
+     */
     @BeforeMethod(alwaysRun = true)
-    public void setUp(@Optional String browser) {
-        if (browser == null) {
-            browser = ConfigReader.getProperty("browser");
-        }
+    public void setUp() {
+        LOGGER.info("Initiating Pre-Test Configuration...");
+        DriverManager.setDriver();
+        driver = DriverManager.getDriver();
         
-        // Read execution configurations
-        boolean isHeadless = Boolean.parseBoolean(ConfigReader.getProperty("headless"));
-        String executionMode = ConfigReader.getProperty("execution.mode");
-        String gridUrl = ConfigReader.getProperty("gridUrl");
-
-        // Initialize driver using the factory with Grid support
-        driver = DriverManager.createDriver(browser, isHeadless, executionMode, gridUrl);
-        
-        // Store in ThreadLocal
-        driverLocal.set(driver);
-        
-        driver.manage().window().maximize();
-        
-        String url = ConfigReader.getProperty("baseUrl");
-        driver.get(url);
+        // Modern Selenium 4 wait implementation replacing deprecated TimeUnit
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
     }
 
+    /**
+     * Cleans up the execution environment post-test to prevent resource exhaustion.
+     */
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        if (getDriver() != null) {
-            getDriver().quit();
-            driverLocal.remove();
-        }
+        LOGGER.info("Executing Post-Test Teardown...");
+        DriverManager.quitDriver();
     }
 
-    // PHASE 4: Generate Excel Report after all parallel threads have finished
-    @AfterSuite(alwaysRun = true)
-    public void generateFinalReport() {
-        System.out.println(">>> Executing Post-Suite Teardown...");
-        ReportGenerator.generateExecutionReport();
+    /**
+     * Retrieves the active driver for the current test context.
+     *
+     * @return The WebDriver instance.
+     */
+    public WebDriver getDriver() {
+        return driver;
     }
 }
