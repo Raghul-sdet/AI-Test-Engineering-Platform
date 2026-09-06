@@ -18,6 +18,7 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class HybridE2ETest extends BaseTest {
 
@@ -40,8 +41,22 @@ public class HybridE2ETest extends BaseTest {
                 
         String registerEndpoint = uiBaseUrl + "/register.htm";
         
-        // Generates a short, unique 9-character username to bypass DB limits
-        String dynamicUser = "QA" + (System.currentTimeMillis() % 1000000); 
+        // Stagger parallel browser thread starts by 2s intervals to reduce simultaneous
+        // ParaBank login hammering. Thread names contain the thread index set by TestNG.
+        String threadName = Thread.currentThread().getName();
+        int threadStaggerMs = 0;
+        if (threadName.contains("-2")) threadStaggerMs = 2000;
+        else if (threadName.contains("-3")) threadStaggerMs = 4000;
+        if (threadStaggerMs > 0) {
+            try { Thread.sleep(threadStaggerMs); } catch (InterruptedException ignored) {}
+        }
+
+        // Guaranteed-unique username per parallel thread:
+        // combines threadId + UUID fragment so concurrent threads never collide,
+        // even if they start within the same millisecond.
+        long threadId = Thread.currentThread().getId();
+        String uuidFragment = UUID.randomUUID().toString().replace("-", "").substring(0, 5).toUpperCase();
+        String dynamicUser = "QA" + threadId + uuidFragment;
         String dynamicPass = "Pass1234"; 
 
         System.out.println("=========================================");
@@ -84,15 +99,35 @@ public class HybridE2ETest extends BaseTest {
             e.printStackTrace(); 
         }
 
-        // API Call: Login to fetch generated Customer ID
-        Response loginResponse = RestAssured.given()
-                .baseUri(apiBaseUrl)
-                .accept(ContentType.JSON)
-                .pathParam("user", dynamicUser)
-                .pathParam("pass", dynamicPass)
-                .when().get("/login/{user}/{pass}");
-
-        Assert.assertEquals(loginResponse.getStatusCode(), 200, "API: Backend Login Failed.");
+        // API Call: Login to fetch generated Customer ID.
+        // Retry up to 3 times with exponential backoff to handle transient ParaBank
+        // rate-limiting (400/429) during parallel browser execution.
+        Response loginResponse = null;
+        int loginStatus = -1;
+        int maxLoginRetries = 3;
+        long backoffMs = 2000;
+        for (int attempt = 1; attempt <= maxLoginRetries; attempt++) {
+            loginResponse = RestAssured.given()
+                    .baseUri(apiBaseUrl)
+                    .accept(ContentType.JSON)
+                    .pathParam("user", dynamicUser)
+                    .pathParam("pass", dynamicPass)
+                    .when().get("/login/{user}/{pass}");
+            loginStatus = loginResponse.getStatusCode();
+            if (loginStatus == 200) break;
+            System.out.println(">>> [Thread:" + Thread.currentThread().getName() + "] Login attempt " + attempt
+                    + " returned HTTP " + loginStatus
+                    + " — " + (loginStatus == 400 || loginStatus == 429
+                        ? "ParaBank rate-limited/rejected this session; retrying after " + backoffMs + "ms"
+                        : "unexpected status"));
+            if (attempt < maxLoginRetries) {
+                try { Thread.sleep(backoffMs); } catch (InterruptedException ignored) {}
+                backoffMs *= 2; // exponential backoff: 2s -> 4s -> 8s
+            }
+        }
+        Assert.assertEquals(loginStatus, 200,
+            "API: Backend Login Failed after " + maxLoginRetries + " attempts (HTTP " + loginStatus + "). "
+            + "If status was 400/429, this is ParaBank rate-limiting, not a framework bug.");
         String customerId = loginResponse.jsonPath().getString("id");
 
         // API Call: Fetch Default Account ID
@@ -147,10 +182,17 @@ public class HybridE2ETest extends BaseTest {
         // 5. DATABASE: JDBC Validation (Phase 3 Integration)
         DBUtility.openConnection();
 
-        // Seed the shadow H2 database to mirror Parabank's backend state
-        DBUtility.executeUpdate("INSERT INTO users (username, password) VALUES (?, ?)", username, password);
-        DBUtility.executeUpdate("INSERT INTO accounts (account_id, user_id, balance) VALUES (?, (SELECT id FROM users WHERE username = ?), ?)", 
-                                targetAccountId, username, 515.50);
+        // Seed the shadow H2 database to mirror Parabank's backend state.
+        // MERGE (H2 upsert) is used instead of INSERT so that parallel threads
+        // sharing the H2 file never throw a duplicate-key violation, even if
+        // cleanup from a previous run didn't fire before the next insert.
+        DBUtility.executeUpdate(
+            "MERGE INTO users (username, password) KEY(username) VALUES (?, ?)",
+            username, password);
+        DBUtility.executeUpdate(
+            "MERGE INTO accounts (account_id, user_id, balance) KEY(account_id) "
+            + "VALUES (?, (SELECT id FROM users WHERE username = ?), ?)",
+            targetAccountId, username, 515.50);
 
         // Query the database to verify the data was committed successfully
         String sql = "SELECT balance FROM accounts WHERE account_id = ?";
