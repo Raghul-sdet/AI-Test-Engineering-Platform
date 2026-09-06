@@ -55,7 +55,7 @@ Automatically aggregates all test results and AI designs into a professional, 8-
 2. **Maven 3.9+**: Ensure `M2_HOME` is set and Maven is on your `PATH`.
 3. **Ollama**: Download and install [Ollama](https://ollama.com/), and pull the required model:
    ```bash
-   ollama pull llama3
+   ollama pull qwen2.5:3b-instruct
    ```
 
 ### Execution
