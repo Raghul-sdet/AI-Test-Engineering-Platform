@@ -1,7 +1,7 @@
 package com.enterprise.banking.ai.execution.registry;
 
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -34,7 +34,7 @@ public class TestRegistry {
      * Initializes the registry by scanning {@link #BASE_PACKAGE} for business test classes.
      */
     public TestRegistry() {
-        keywordToTestMap = new HashMap<>();
+        keywordToTestMap = new java.util.TreeMap<>();
         initializeRegistry();
     }
 

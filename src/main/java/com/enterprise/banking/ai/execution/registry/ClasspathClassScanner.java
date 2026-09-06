@@ -70,6 +70,7 @@ final class ClasspathClassScanner {
         if (files == null) {
             return;
         }
+        java.util.Arrays.sort(files);
         for (File file : files) {
             if (file.isDirectory()) {
                 collectClasses(file, packageName + "." + file.getName(), found);

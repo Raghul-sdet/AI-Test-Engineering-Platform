@@ -36,7 +36,10 @@ public class ScenarioToTestMapper implements ExecutionMapper {
 
         String searchContext = buildSearchContext(scenario);
         
-        for (String keyword : testRegistry.getRegisteredKeywords()) {
+        java.util.List<String> sortedKeywords = new java.util.ArrayList<>(testRegistry.getRegisteredKeywords());
+        sortedKeywords.sort((k1, k2) -> Integer.compare(k2.length(), k1.length()));
+        
+        for (String keyword : sortedKeywords) {
             if (searchContext.contains(keyword)) {
                 String mappedClass = testRegistry.getTestClass(keyword);
                 LOGGER.log(Level.FINE, "Mapped scenario {0} to Test Class: {1} via keyword [{2}]",
