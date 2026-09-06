@@ -29,7 +29,7 @@ public class MappingEngineTest {
 
         // 2. Execute the Intelligent Mapping Protocol
         ActionMappingEngine mappingEngine = new ActionMappingEngine();
-        mappingEngine.executeMappingProtocol(domRepository);
+        mappingEngine.executeMappingProtocol(domRepository, targetUrl);
 
         System.out.println("==================================================");
         System.out.println("      ACTION MAPPING ENGINE - TEST END            ");

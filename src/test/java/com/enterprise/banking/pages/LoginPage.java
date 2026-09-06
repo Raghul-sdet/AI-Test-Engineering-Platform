@@ -56,6 +56,15 @@ public class LoginPage {
         wait.until(ExpectedConditions.elementToBeClickable(logoutLink)).click();
     }
 
+    /**
+     * Explicitly waits for the login to complete by verifying the presence of
+     * the "Log Out" link, which only appears after a successful authentication.
+     * Call this after clickLogin() before navigating to any other page.
+     */
+    public void waitForLoginSuccess() {
+        wait.until(ExpectedConditions.elementToBeClickable(logoutLink));
+    }
+
     // Verify successful login
     public boolean isOverviewDisplayed() {
         try {

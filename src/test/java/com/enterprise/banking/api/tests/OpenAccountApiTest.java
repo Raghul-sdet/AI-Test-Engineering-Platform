@@ -12,7 +12,7 @@ public class OpenAccountApiTest extends BaseApiTest {
     public void verifyOpenAccount() {
         String customerId = "12212";
         String accountType = "1"; // 0 = CHECKING, 1 = SAVINGS
-        String fromAccountId = "19005";
+        String fromAccountId = "12345";
 
         String endpoint = "/createAccount";
 

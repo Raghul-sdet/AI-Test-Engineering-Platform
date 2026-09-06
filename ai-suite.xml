@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="AI Test Engineering Platform Suite" verbose="1">
+
+    <listeners>
+        <listener class-name="com.enterprise.banking.listeners.TestListener" />
+    </listeners>
+
+    <!--
+        Full pipeline: requirement -> AI scenario generation -> AI test case generation
+        -> H2 persistence -> Excel export (Professional_Enterprise_Report.xlsx) -> Selenium code
+        generation -> compilation/execution -> Extent/Allure reporting.
+        Runs on its own <test> so a failure here does not block the unit-level AI tests below.
+    -->
+    <test name="AI End-To-End Pipeline">
+        <classes>
+            <class name="com.enterprise.banking.tests.EndToEndAiExecution"/>
+        </classes>
+    </test>
+
+    <!-- Unit/component-level tests for the core AI engines (requirement analysis, scenario/test
+         case generation, DOM discovery, action mapping, self-healing, notification/email). -->
+    <test name="AI Component Tests">
+        <classes>
+            <class name="com.enterprise.banking.tests.AITestDataGenerationTest"/>
+            <class name="com.enterprise.banking.tests.AiAssistantTest"/>
+            <class name="com.enterprise.banking.tests.AnomalyDetectorTest"/>
+            <class name="com.enterprise.banking.tests.DomEngineTest"/>
+            <class name="com.enterprise.banking.tests.DynamicExecutionTest"/>
+            <class name="com.enterprise.banking.tests.EmailConnectorTest"/>
+            <class name="com.enterprise.banking.tests.ExecutionMappingTest"/>
+            <class name="com.enterprise.banking.tests.ExplorationEngineTest"/>
+            <class name="com.enterprise.banking.tests.MappingEngineTest"/>
+            <class name="com.enterprise.banking.tests.NavigationPlannerTest"/>
+            <class name="com.enterprise.banking.tests.NotificationEngineTest"/>
+            <class name="com.enterprise.banking.tests.PageDiscoveryEngineTest"/>
+            <class name="com.enterprise.banking.tests.RequirementAnalyzerTest"/>
+            <class name="com.enterprise.banking.tests.ScenarioGenerationTest"/>
+            <class name="com.enterprise.banking.tests.SelfHealingEngineTest"/>
+            <class name="com.enterprise.banking.tests.SlackConnectorTest"/>
+            <class name="com.enterprise.banking.tests.TeamsConnectorTest"/>
+            <class name="com.enterprise.banking.tests.WebhookConnectorTest"/>
+        </classes>
+    </test>
+
+</suite>

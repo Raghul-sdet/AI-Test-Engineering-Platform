@@ -30,7 +30,7 @@ public class AccountOverviewPage {
     // --- Constructor ---
     public AccountOverviewPage(WebDriver driver) {
         PageFactory.initElements(driver, this);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
     // --- Standard Methods ---

@@ -93,7 +93,22 @@ public class ExecutionCoordinator {
             throw new AiExtensionException("System Java Compiler is unavailable. Ensure the framework is running on a JDK, not a JRE.");
         }
 
-        int compilationResult = compiler.run(null, null, null, sourceFile.getAbsolutePath());
+        // IMPORTANT: without an explicit "-d" destination, javac writes the compiled .class
+        // file flat, in the SAME directory as the .java source - it ignores the package
+        // declaration entirely and does NOT create a matching com/enterprise/.../ directory
+        // tree. But loadCompiledClass() below builds a URLClassLoader rooted at that same flat
+        // directory and asks for the fully-qualified class name (with the "generated" package),
+        // which a URLClassLoader can only resolve if the .class file lives in a matching nested
+        // package directory under the classloader's root. Passing "-d" here makes javac create
+        // that expected package-directory structure so the two agree on where the class lives.
+        //
+        // Also use getAbsoluteFile().getParentFile() rather than getParentFile() directly:
+        // for a relative, single-segment path (e.g. new File("generated-code"), with no
+        // directory separator), getParentFile() returns null, which previously NPE'd here.
+        // The absolute form always has a parent (the current working directory) unless the
+        // path resolves to the filesystem root.
+        String destinationDir = sourceFile.getAbsoluteFile().getParentFile().getAbsolutePath();
+        int compilationResult = compiler.run(null, null, null, "-d", destinationDir, sourceFile.getAbsolutePath());
         if (compilationResult != 0) {
             throw new AiExtensionException("Dynamic compilation failed for file: " + sourceFile.getName());
         }
@@ -109,7 +124,7 @@ public class ExecutionCoordinator {
      * @throws Exception if URL conversion or class finding fails.
      */
     private Class<?> loadCompiledClass(File sourceFile) throws Exception {
-        File parentDirectory = sourceFile.getParentFile();
+        File parentDirectory = sourceFile.getAbsoluteFile().getParentFile();
         URL[] urls = new URL[]{parentDirectory.toURI().toURL()};
         
         // Extract the raw class name without the .java extension

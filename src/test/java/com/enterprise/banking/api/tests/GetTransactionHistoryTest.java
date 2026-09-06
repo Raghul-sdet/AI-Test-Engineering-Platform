@@ -13,7 +13,7 @@ public class GetTransactionHistoryTest extends BaseApiTest {
     @Test(description = "Verify GET Transaction History API returns array of transactions")
     public void verifyTransactionHistory() {
         Map<String, Object> pathParams = new HashMap<>();
-        pathParams.put("accountId", "19005");
+        pathParams.put("accountId", "12345");
 
         String endpoint = "/accounts/{accountId}/transactions";
         Response response = ApiUtils.getWithPathParams(requestSpec, endpoint, pathParams);
@@ -23,6 +23,6 @@ public class GetTransactionHistoryTest extends BaseApiTest {
 
         int transactionCount = response.jsonPath().getList("$").size();
         Assert.assertTrue(transactionCount > 0, "Transaction history should not be empty");
-        Assert.assertNotNull(response.jsonPath().getString("[0].transactionId"), "Transaction ID missing");
+        Assert.assertNotNull(response.jsonPath().getString("[0].id"), "Transaction ID missing");
     }
 }

@@ -54,3 +54,5 @@ generated-code/
 # ==========================
 .DS_Store
 Thumbs.db
+/.apt_generated/
+/.apt_generated_tests/

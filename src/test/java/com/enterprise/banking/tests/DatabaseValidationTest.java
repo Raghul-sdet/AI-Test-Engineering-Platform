@@ -17,7 +17,7 @@ public class DatabaseValidationTest {
         
         // Seed test data strictly for this isolated unit test
         DBUtility.executeUpdate("INSERT INTO users (username, password) VALUES (?, ?)", "DBUser01", "Pass123");
-        DBUtility.executeUpdate("INSERT INTO accounts (account_id, user_id, balance) VALUES (?, SELECT id FROM users WHERE username = ?, ?)", 
+        DBUtility.executeUpdate("INSERT INTO accounts (account_id, user_id, balance) VALUES (?, (SELECT id FROM users WHERE username = ?), ?)", 
                                 99999, "DBUser01", 1500.50);
     }
 
@@ -48,6 +48,8 @@ public class DatabaseValidationTest {
 
     @AfterMethod
     public void tearDownDbConnection() {
+        DBUtility.executeUpdate("DELETE FROM accounts WHERE user_id = (SELECT id FROM users WHERE username = ?)", "DBUser01");
+        DBUtility.executeUpdate("DELETE FROM users WHERE username = ?", "DBUser01");
         DBUtility.closeConnection();
     }
 }

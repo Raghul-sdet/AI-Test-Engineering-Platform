@@ -4,7 +4,8 @@ import com.enterprise.banking.ai.model.TestCase;
 import com.enterprise.banking.ai.model.TestScenario;
 import com.enterprise.banking.ai.exception.AiExtensionException;
 import com.enterprise.banking.ai.provider.AiProvider;
-import com.enterprise.banking.ai.provider.OpenAiProvider;
+import com.enterprise.banking.ai.provider.AiProviderFactory;
+import com.enterprise.banking.ai.prompt.PromptTemplates;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,11 @@ public class AiTestCaseGeneratorService {
 
     /**
      * Default constructor initializing the standard Enterprise AI Provider.
+     * Uses Ollama local inference instead of throwing during construction.
+     * See AiTestOrchestrator.resolveDefaultProvider().
      */
     public AiTestCaseGeneratorService() {
-        this.aiProvider = new OpenAiProvider();
+        this.aiProvider = AiProviderFactory.createProvider();
     }
 
     /**
@@ -61,7 +64,9 @@ public class AiTestCaseGeneratorService {
             try {
                 LOGGER.debug("Transmitting scenario context to AI Provider. Scenario ID: {}", scenario.getScenarioId());
                 
-                String systemPrompt = "Analyze the scenario and generate deterministic test cases. Format exactly with TEST_CASE_START and TEST_CASE_END bounds. Include tags: TITLE:, OBJECTIVE:, PRECONDITION:, PRIORITY:, SEVERITY:, STEPS:.";
+                // Centralised prompt: enforces minimum 3 test cases per scenario,
+                // numbered steps, and exact TEST_CASE_START/TEST_CASE_END delimiter format with few-shot examples.
+                String systemPrompt = PromptTemplates.getTestCaseGenerationSystemPrompt();
                 String aiResponse = aiProvider.generateResponse(systemPrompt, scenario.getScenarioDescription());
                 
                 if (aiResponse == null || aiResponse.trim().isEmpty()) {

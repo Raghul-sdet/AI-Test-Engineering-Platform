@@ -21,6 +21,7 @@ public class AccountOverviewTest extends BaseTest {
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
+        loginPage.waitForLoginSuccess();
 
         // Step 2: Initialize Overview Page 
         // FIX: Replaced 'driver' with 'getDriver()'

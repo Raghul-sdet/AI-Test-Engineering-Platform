@@ -1,94 +1,133 @@
 package com.enterprise.banking.repositories;
 
-import com.enterprise.banking.utils.DatabaseManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
+/**
+ * Enterprise H2 Repository
+ *
+ * Responsible for:
+ * 1. Database initialization & Auto-Healing
+ * 2. Persisting users
+ * 3. Reading fully data-driven test rows directly from the DB
+ */
 public class UserRepository {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserRepository.class);
+
+    private static final String DB_URL =
+            "jdbc:h2:file:./target/h2db/test_users_db;AUTO_SERVER=TRUE";
+
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "";
+
     /**
-     * Initializes the H2 database schema safely. 
-     * Uses 'IF NOT EXISTS' to ensure it doesn't overwrite existing data during parallel runs.
+     * Auto-Healing Logic: Creates table with DEFAULT values for Parabank testing.
      */
-    public static synchronized void initializeSchema() {
-        String createTableSql = "CREATE TABLE IF NOT EXISTS test_users (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                "username VARCHAR(100) NOT NULL UNIQUE, " +
-                "password VARCHAR(100) NOT NULL, " +
-                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement()) {
-             
-            stmt.execute(createTableSql);
-            System.out.println(">>> [H2 DB] Schema Initialized: 'test_users' table is ready.");
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("CRITICAL: Failed to initialize H2 database schema.", e);
+    private static void ensureTableExists(Connection connection) throws Exception {
+        String createTable = """
+                CREATE TABLE IF NOT EXISTS test_users(
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(255) NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    transfer_amount VARCHAR(50) DEFAULT '10',
+                    search_amount VARCHAR(50) DEFAULT '10',
+                    search_date VARCHAR(50) DEFAULT '11-20-2023',
+                    search_trans_id VARCHAR(50) DEFAULT '12345'
+                )
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(createTable)) {
+            statement.execute();
         }
     }
 
-    /**
-     * Saves a newly registered user to the database.
-     * try-with-resources automatically closes the Connection and PreparedStatement.
-     */
+    public static void initializeDatabase() {
+        try (
+                Connection connection =
+                        DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)
+        ) {
+            ensureTableExists(connection);
+            LOGGER.info("TEST_USERS table initialized successfully.");
+            System.out.println("==========================================");
+            System.out.println("H2 Database Initialized Successfully");
+            System.out.println("Table : TEST_USERS (With Default Data Columns)");
+            System.out.println("==========================================");
+        } catch (Exception exception) {
+            LOGGER.error("Database initialization failed.", exception);
+            throw new RuntimeException("Unable to initialize H2 database.", exception);
+        }
+    }
+
     public static void saveUser(String username, String password) {
-        String insertSql = "INSERT INTO test_users (username, password) VALUES (?, ?)";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
-            
-            pstmt.setString(1, username);
-            pstmt.setString(2, password);
-            
-            int rowsAffected = pstmt.executeUpdate();
-            if (rowsAffected > 0) {
-                System.out.println(">>> [H2 DB] User saved successfully to Database: " + username);
+        String insertQuery =
+                "INSERT INTO test_users(username,password) VALUES (?,?)";
+
+        try (
+                Connection connection =
+                        DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        ) {
+            ensureTableExists(connection);
+
+            try (PreparedStatement statement = connection.prepareStatement(insertQuery)) {
+                statement.setString(1, username);
+                statement.setString(2, password);
+                statement.executeUpdate();
+                LOGGER.info("User saved : {}", username);
+                System.out.println("Saved User : " + username);
             }
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to save user to H2 database: " + username, e);
+        } catch (Exception exception) {
+            LOGGER.error("Failed to save user.", exception);
+            throw new RuntimeException("Failed to save user.", exception);
         }
     }
 
     /**
-     * Fetches the most recently registered user from the database.
-     * Returns an Object[][] array formatted perfectly for TestNG DataProviders.
+     * Returns the complete 6-parameter row directly from the Database.
      */
-    public static Object[][] getLatestUserForTest() {
-        // Query to get the 1 most recently created user
-        String selectSql = "SELECT username, password FROM test_users ORDER BY id DESC LIMIT 1";
-        
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(selectSql)) {
-            
-            if (rs.next()) {
-                String username = rs.getString("username");
-                String password = rs.getString("password");
-                
-                System.out.println(">>> [H2 DB] Successfully retrieved latest user for testing: " + username);
-                
-                // Return exactly what TestNG expects: a 2D array.
-                // The remaining parameters are mapped here to seamlessly match the legacy method signature.
-                SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
-                String todayDate = sdf.format(new Date());
-                
-                return new Object[][] {
-                    { username, password, "50", "50", todayDate, "" }
-                };
-            } else {
-                throw new RuntimeException("CRITICAL: H2 Database is empty. No users found to run tests.");
+    public static String[] getLatestUserForTest() {
+        String selectQuery =
+                "SELECT * FROM test_users ORDER BY id DESC LIMIT 1";
+
+        try (
+                Connection connection =
+                        DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        ) {
+            ensureTableExists(connection);
+
+            try (PreparedStatement statement = connection.prepareStatement(selectQuery);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                if (resultSet.next()) {
+                    String username = resultSet.getString("username");
+                    LOGGER.info("Latest user loaded : {}", username);
+                    System.out.println("Latest User Extracted From DB: " + username);
+
+                    // ULTIMATE FIX: Dynamically generate TODAY's date in MM-dd-yyyy format
+                    // This ensures Parabank successfully finds the transaction created just now!
+                    String todayDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
+
+                    return new String[]{
+                            resultSet.getString("username"),
+                            resultSet.getString("password"),
+                            resultSet.getString("transfer_amount"),
+                            resultSet.getString("search_amount"),
+                            todayDate, // Replaced the hardcoded DB date with dynamic Today's Date!
+                            resultSet.getString("search_trans_id")
+                    };
+                }
+
+                throw new RuntimeException("No registered user found inside H2 database.");
             }
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve user from H2 database.", e);
+        } catch (Exception exception) {
+            LOGGER.error("Failed retrieving latest user.", exception);
+            throw new RuntimeException("Unable to retrieve latest user.", exception);
         }
     }
 }

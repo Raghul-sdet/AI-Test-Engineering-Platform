@@ -32,7 +32,7 @@ public class AiAssistantTest {
         // 3. Export Phase (Excel Workbook Generation)
         System.out.println("\n--- EXPORTING DATA FROM DATABASE TO EXCEL ---");
         DatabaseToExcelExporter exporter = new DatabaseToExcelExporter();
-        String excelPath = "AI_Test_Design.xlsx";
+        String excelPath = System.getProperty("user.dir") + java.io.File.separator + "target" + java.io.File.separator + "reports" + java.io.File.separator + "Professional_Enterprise_Report.xlsx";
         // Fixed: Passing both plan and path as required by the updated exporter
         exporter.exportToExcel(plan, excelPath);
 

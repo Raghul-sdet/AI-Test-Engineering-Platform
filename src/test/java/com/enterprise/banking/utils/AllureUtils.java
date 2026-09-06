@@ -5,7 +5,6 @@ import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.logging.LogEntries;
-import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.logging.LogType;
 
 import java.util.stream.Collectors;
@@ -49,7 +48,8 @@ public class AllureUtils {
             try {
                 LogEntries logEntries = driver.manage().logs().get(LogType.BROWSER);
                 return logEntries.getAll().stream()
-                        .map(LogEntry::toString)
+                        .filter(e -> e != null)
+                        .map(e -> e.toString())
                         .collect(Collectors.joining(System.lineSeparator()));
             } catch (Exception e) {
                 return "Browser console logs not supported or available for this driver instance.";

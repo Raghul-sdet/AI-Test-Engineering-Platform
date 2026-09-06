@@ -14,7 +14,9 @@
             <class name="com.enterprise.banking.tests.TransferFundsTest"/>
             <class name="com.enterprise.banking.tests.OpenAccountTest"/>
             <class name="com.enterprise.banking.tests.FindTransactionsTest"/>
-            <class name="com.enterprise.banking.api.AccountApiTest"/>
+            <class name="com.enterprise.banking.api.tests.OpenAccountApiTest"/>
+            <class name="com.enterprise.banking.api.tests.TransferFundsApiTest"/>
+            <class name="com.enterprise.banking.api.tests.GetTransactionHistoryTest"/>
         </classes>
     </test>
     

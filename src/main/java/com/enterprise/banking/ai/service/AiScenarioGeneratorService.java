@@ -3,7 +3,8 @@ package com.enterprise.banking.ai.service;
 import com.enterprise.banking.ai.exception.AiExtensionException;
 import com.enterprise.banking.ai.model.TestScenario;
 import com.enterprise.banking.ai.provider.AiProvider;
-import com.enterprise.banking.ai.provider.OpenAiProvider;
+import com.enterprise.banking.ai.provider.AiProviderFactory;
+import com.enterprise.banking.ai.prompt.PromptTemplates;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,16 +24,17 @@ public class AiScenarioGeneratorService {
 
     /**
      * Default constructor initializing the standard Enterprise AI Provider.
-     * Required for framework orchestration instantiation without manual dependency wiring.
+     * Uses Ollama local inference instead of throwing during construction. 
+     * See AiTestOrchestrator.resolveDefaultProvider().
      */
     public AiScenarioGeneratorService() {
-        this.aiProvider = new OpenAiProvider();
+        this.aiProvider = AiProviderFactory.createProvider();
     }
 
     /**
      * Parameterized constructor for Dependency Injection and isolated unit testing.
      *
-     * @param aiProvider The AI engine integration provider (e.g., MockAiProvider).
+     * @param aiProvider The AI engine integration provider.
      */
     public AiScenarioGeneratorService(AiProvider aiProvider) {
         this.aiProvider = aiProvider;
@@ -55,11 +57,10 @@ public class AiScenarioGeneratorService {
         LOGGER.info("Initiating AI-driven Test Scenario generation for requirement length: {} characters", requirementText.length());
         
         try {
-            // Static system instruction to enforce structural output from the AI model
-            String systemPrompt = "Analyze the provided requirement and generate deterministic test scenarios. "
-                    + "Format exactly with SCENARIO_START and SCENARIO_END bounds. "
-                    + "Include specific tags: TITLE:, DESCRIPTION:, CATEGORY:, PRIORITY:.";
-            
+            // Centralised prompt: enforces minimum 5 scenarios, all coverage categories,
+            // and exact SCENARIO_START/SCENARIO_END delimiter format with few-shot examples.
+            String systemPrompt = PromptTemplates.getScenarioGenerationSystemPrompt();
+
             String aiResponse = aiProvider.generateResponse(systemPrompt, requirementText);
             
             if (aiResponse == null || aiResponse.trim().isEmpty()) {

@@ -61,7 +61,7 @@ public class DOMAnalyzer {
 
                 elementsMetadata.add(domElement);
 
-            } catch (Exception e) {
+            } catch (Exception ignored) {
                 // Silently swallow StaleElementExceptions during scanning
             }
         }

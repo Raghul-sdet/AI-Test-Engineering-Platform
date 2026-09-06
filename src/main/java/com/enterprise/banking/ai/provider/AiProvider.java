@@ -11,7 +11,7 @@ public interface AiProvider {
 
     /**
      * The foundational execution contract required by legacy implementations 
-     * such as MockAiProvider, OpenAiProvider, and RequirementAnalyzer.
+     * such as OpenAiProvider and RequirementAnalyzer.
      *
      * @param systemPrompt The structural and behavioral instructions directing the AI model.
      * @param userPrompt   The dynamic user payload or context to be analyzed.

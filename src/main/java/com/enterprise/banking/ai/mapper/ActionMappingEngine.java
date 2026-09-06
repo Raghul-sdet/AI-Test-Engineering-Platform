@@ -20,13 +20,19 @@ public class ActionMappingEngine {
     private final DataProviderSkeletonGenerator dataProviderGenerator = new DataProviderSkeletonGenerator();
     private final TestClassGenerator testGenerator = new TestClassGenerator();
 
-    public void executeMappingProtocol(List<DOMElement> domRepository) throws Exception {
+    /**
+     * @param domRepository the DOM elements discovered on the target page
+     * @param targetUrl     the site URL these elements were discovered on. Passed straight
+     *                      through to the generated test class so it navigates to the real
+     *                      site under test rather than a hardcoded one.
+     */
+    public void executeMappingProtocol(List<DOMElement> domRepository, String targetUrl) throws Exception {
         System.out.println("\n[MAPPING-ENGINE] Initiating Action Mapping Engine...");
         
         List<MappedAction> mappedActions = new ArrayList<>();
         int skippedSteps = 0;
 
-        // Simulated steps parsed from AI_Test_Design.xlsx
+        // Simulated steps parsed from Professional_Enterprise_Report.xlsx
         String[][] excelSteps = {
             {"enterUsername", "Enter Username", "Username=testuser"},
             {"clickLogin", "Click Login Button", ""}
@@ -71,7 +77,7 @@ public class ActionMappingEngine {
             codeGenerator.generateExecutablePageObject("IntelligentLoginPage", mappedActions);
             
             // Generate the TestNG Test Class
-            testGenerator.generateTestClass("IntelligentLoginTest", "IntelligentLoginPage", mappedActions);
+            testGenerator.generateTestClass("IntelligentLoginTest", "IntelligentLoginPage", mappedActions, targetUrl);
             
             // Generate Data Provider Skeleton
             dataProviderGenerator.generateSkeleton();

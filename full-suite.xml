@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+    Full enterprise test suite — executes every test category in a single Maven invocation.
+
+    Usage:  mvn test -DsuiteXmlFile=full-suite.xml
+
+    Sheet mapping in Professional_Enterprise_Report.xlsx (enforced by ExecutionResultExporter):
+      1. Statistics Dashboard
+      2. Test Design Report
+      3. UI Test Results
+      4. API Test Results
+      5. Database Test Results
+      6. Hybrid E2E Test Results
+      7. AI Component Test Results
+
+    TestListener.onExecutionStart() initialises the H2 schema (DatabaseSetupUtility) before
+    any test class is loaded, so Database and Hybrid E2E tests find their tables already created.
+-->
+<suite name="Full Enterprise QA Suite" verbose="1" parallel="false">
+
+    <listeners>
+        <!-- Initialises DB schema, captures screenshots on failure, writes final Excel report -->
+        <listener class-name="com.enterprise.banking.listeners.TestListener"/>
+        <!-- Retry-on-failure transformer (2 retries for flaky UI/API tests) -->
+        <listener class-name="com.enterprise.banking.listeners.RetryTransformer"/>
+    </listeners>
+
+    <!-- ═══════════════════════════════════════════════════
+         1. UI Tests  →  "UI Test Results" sheet
+         ═══════════════════════════════════════════════════ -->
+    <test name="UI Tests">
+        <classes>
+            <class name="com.enterprise.banking.tests.RegistrationTest"/>
+            <class name="com.enterprise.banking.tests.AccountOverviewTest"/>
+            <class name="com.enterprise.banking.tests.TransferFundsTest"/>
+            <class name="com.enterprise.banking.tests.OpenAccountTest"/>
+            <class name="com.enterprise.banking.tests.FindTransactionsTest"/>
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════
+         2. API Tests  →  "API Test Results" sheet
+         ═══════════════════════════════════════════════════ -->
+    <test name="API Tests">
+        <classes>
+            <class name="com.enterprise.banking.api.tests.CreateCustomerTest"/>
+            <class name="com.enterprise.banking.api.tests.GetCustomerDetailsTest"/>
+            <class name="com.enterprise.banking.api.tests.OpenAccountApiTest"/>
+            <class name="com.enterprise.banking.api.tests.TransferFundsApiTest"/>
+            <class name="com.enterprise.banking.api.tests.GetTransactionHistoryTest"/>
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════
+         3. Database Tests  →  "Database Test Results" sheet
+         (Schema already initialised by TestListener.onExecutionStart)
+         ═══════════════════════════════════════════════════ -->
+    <test name="Database Tests">
+        <classes>
+            <class name="com.enterprise.banking.tests.DatabaseValidationTest"/>
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════
+         4. Hybrid E2E Tests  →  "Hybrid E2E Test Results" sheet
+         ═══════════════════════════════════════════════════ -->
+    <test name="Hybrid E2E Tests">
+        <classes>
+            <class name="com.enterprise.banking.hybrid.tests.HybridE2ETest"/>
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════
+         5. AI End-to-End Pipeline (counted under "AI Component Test Results")
+         ═══════════════════════════════════════════════════ -->
+    <test name="AI End-To-End Pipeline">
+        <classes>
+            <class name="com.enterprise.banking.tests.EndToEndAiExecution"/>
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════
+         6. AI Component / Unit Tests  →  "AI Component Test Results" sheet
+         ═══════════════════════════════════════════════════ -->
+    <test name="AI Component Tests">
+        <classes>
+            <class name="com.enterprise.banking.tests.AITestDataGenerationTest"/>
+            <class name="com.enterprise.banking.tests.AiAssistantTest"/>
+            <class name="com.enterprise.banking.tests.AnomalyDetectorTest"/>
+            <class name="com.enterprise.banking.tests.DomEngineTest"/>
+            <class name="com.enterprise.banking.tests.DynamicExecutionTest"/>
+            <class name="com.enterprise.banking.tests.EmailConnectorTest"/>
+            <class name="com.enterprise.banking.tests.ExecutionMappingTest"/>
+            <class name="com.enterprise.banking.tests.ExplorationEngineTest"/>
+            <class name="com.enterprise.banking.tests.MappingEngineTest"/>
+            <class name="com.enterprise.banking.tests.NavigationPlannerTest"/>
+            <class name="com.enterprise.banking.tests.NotificationEngineTest"/>
+            <class name="com.enterprise.banking.tests.PageDiscoveryEngineTest"/>
+            <class name="com.enterprise.banking.tests.RequirementAnalyzerTest"/>
+            <class name="com.enterprise.banking.tests.ScenarioGenerationTest"/>
+            <class name="com.enterprise.banking.tests.SelfHealingEngineTest"/>
+            <class name="com.enterprise.banking.tests.SlackConnectorTest"/>
+            <class name="com.enterprise.banking.tests.TeamsConnectorTest"/>
+            <class name="com.enterprise.banking.tests.WebhookConnectorTest"/>
+        </classes>
+    </test>
+
+</suite>

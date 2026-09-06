@@ -25,7 +25,7 @@ public class StatisticsGenerator {
 
         for (TestScenario scenario : plan.scenarios()) {
             // Aggregate Categories
-            categoryDist.merge(scenario.category(), 1, Integer::sum);
+            categoryDist.merge(scenario.category(), 1, (a, b) -> a + b);
 
             List<TestCase> cases = plan.testCasesByScenarioId().getOrDefault(scenario.id(), List.of());
             totalCases += cases.size();
@@ -34,8 +34,8 @@ public class StatisticsGenerator {
                 totalSteps += tc.steps().size();
                 
                 // Aggregate Priorities and Severities
-                priorityDist.merge(tc.priority(), 1, Integer::sum);
-                severityDist.merge(tc.severity(), 1, Integer::sum);
+                priorityDist.merge(tc.priority(), 1, (a, b) -> a + b);
+                severityDist.merge(tc.severity(), 1, (a, b) -> a + b);
             }
         }
 

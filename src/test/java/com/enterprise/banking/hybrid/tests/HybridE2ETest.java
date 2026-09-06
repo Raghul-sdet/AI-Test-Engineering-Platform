@@ -26,6 +26,9 @@ public class HybridE2ETest extends BaseTest {
 
     @BeforeMethod
     public void setupApiData() {
+        if (state == null) {
+            state = new TestState();
+        }
         String apiBaseUrl = ConfigReader.getProperty("apiBaseUrl"); 
         String uiBaseUrl = ConfigReader.getProperty("uiBaseUrl");
         
@@ -146,7 +149,7 @@ public class HybridE2ETest extends BaseTest {
 
         // Seed the shadow H2 database to mirror Parabank's backend state
         DBUtility.executeUpdate("INSERT INTO users (username, password) VALUES (?, ?)", username, password);
-        DBUtility.executeUpdate("INSERT INTO accounts (account_id, user_id, balance) VALUES (?, SELECT id FROM users WHERE username = ?, ?)", 
+        DBUtility.executeUpdate("INSERT INTO accounts (account_id, user_id, balance) VALUES (?, (SELECT id FROM users WHERE username = ?), ?)", 
                                 targetAccountId, username, 515.50);
 
         // Query the database to verify the data was committed successfully
@@ -168,7 +171,11 @@ public class HybridE2ETest extends BaseTest {
 
     @AfterMethod
     public void cleanupState() {
-        // Clear object reference for clean garbage collection
-        state = null;
+        if (state != null && state.getUsername() != null) {
+            DBUtility.openConnection();
+            DBUtility.executeUpdate("DELETE FROM accounts WHERE user_id = (SELECT id FROM users WHERE username = ?)", state.getUsername());
+            DBUtility.executeUpdate("DELETE FROM users WHERE username = ?", state.getUsername());
+            DBUtility.closeConnection();
+        }
     }
 }
