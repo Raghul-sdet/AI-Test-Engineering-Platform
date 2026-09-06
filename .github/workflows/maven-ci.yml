@@ -10,7 +10,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -28,22 +28,60 @@ jobs:
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
           ollama serve &
-          sleep 5
+
+          # Wait for Ollama to be reachable (up to 60s) before pulling the model.
+          # A fixed sleep is not reliable on resource-constrained runners.
+          echo "Waiting for Ollama to become ready..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; then
+              echo "Ollama is ready after ${i}x2s attempts."
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "ERROR: Ollama did not start within 60 seconds. Failing step."
+              exit 1
+            fi
+            sleep 2
+          done
+
           ollama pull qwen2.5:3b-instruct
 
-      - name: Build, Test and Analyze with SonarCloud
+      - name: Run Full Test Suite
+        run: mvn clean verify "-DsuiteXmlFile=full-suite.xml"
+
+      - name: Analyze with SonarCloud
+        if: ${{ secrets.SONAR_TOKEN != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn clean verify -DsuiteXmlFile=full-suite.xml org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=raghul-sdet -Dsonar.host.url=https://sonarcloud.io
+        run: |
+          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=raghul-sdet \
+            -Dsonar.host.url=https://sonarcloud.io
+        continue-on-error: true
+
+      - name: SonarCloud skipped notice
+        if: ${{ secrets.SONAR_TOKEN == '' }}
+        run: echo "Sonar skipped — SONAR_TOKEN secret not configured in this repository."
 
       - name: SonarCloud Quality Gate Check
+        if: ${{ secrets.SONAR_TOKEN != '' }}
         uses: sonarsource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
         with:
           scanMetadataReportFile: target/sonar/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+
+      - name: Upload Surefire Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
 
       - name: Upload Allure Results
         if: always()

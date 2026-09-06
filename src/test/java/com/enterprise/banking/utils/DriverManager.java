@@ -38,9 +38,24 @@ public final class DriverManager {
     public static void setDriver() {
         if (DRIVER_THREAD_LOCAL.get() == null) {
             ChromeOptions options = new ChromeOptions();
-            options.addArguments("--remote-allow-origins=*");
-            options.addArguments("--start-maximized");
-            // Headless mode can be injected here via environment variables if required for CI/CD
+
+            // Check config.properties for headless=true (CI/CD environments like GitHub Actions
+            // have no display server, so headless is mandatory there).
+            String headlessProp = ConfigReader.getProperty("headless");
+            boolean headless = "true".equalsIgnoreCase(headlessProp);
+
+            if (headless) {
+                options.addArguments("--headless=new");         // Modern headless mode (Chrome 112+)
+                options.addArguments("--no-sandbox");           // Required in containerised/CI environments
+                options.addArguments("--disable-gpu");          // Avoids GPU-related crashes in headless mode
+                options.addArguments("--disable-dev-shm-usage"); // Prevents crashes on runners with small /dev/shm
+                options.addArguments("--window-size=1920,1080"); // Fixed size replaces --start-maximized in headless
+                LOGGER.info("WebDriver running in HEADLESS mode (CI/CD environment detected).");
+            } else {
+                options.addArguments("--remote-allow-origins=*");
+                options.addArguments("--start-maximized");
+                LOGGER.info("WebDriver running in NORMAL (headed) mode.");
+            }
 
             WebDriver driver = new ChromeDriver(options);
             DRIVER_THREAD_LOCAL.set(driver);
