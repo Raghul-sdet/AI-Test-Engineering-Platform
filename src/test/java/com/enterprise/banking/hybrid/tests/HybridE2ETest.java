@@ -102,11 +102,26 @@ public class HybridE2ETest extends BaseTest {
         // API Call: Login to fetch generated Customer ID.
         // Retry up to 3 times with exponential backoff to handle transient ParaBank
         // rate-limiting (400/429) during parallel browser execution.
-        Response loginResponse = null;
+        // loginResponse is always assigned inside the loop on every iteration,
+        // so it is guaranteed non-null by the time we reach the Assert below.
         int loginStatus = -1;
         int maxLoginRetries = 3;
         long backoffMs = 2000;
-        for (int attempt = 1; attempt <= maxLoginRetries; attempt++) {
+        Response loginResponse = RestAssured.given()  // pre-assign so compiler sees non-null
+                .baseUri(apiBaseUrl)
+                .accept(ContentType.JSON)
+                .pathParam("user", dynamicUser)
+                .pathParam("pass", dynamicPass)
+                .when().get("/login/{user}/{pass}");
+        loginStatus = loginResponse.getStatusCode();
+        for (int attempt = 2; attempt <= maxLoginRetries && loginStatus != 200; attempt++) {
+            System.out.println(">>> [Thread:" + Thread.currentThread().getName() + "] Login attempt " + (attempt - 1)
+                    + " returned HTTP " + loginStatus
+                    + " — " + (loginStatus == 400 || loginStatus == 429
+                        ? "ParaBank rate-limited/rejected this session; retrying after " + backoffMs + "ms"
+                        : "unexpected status"));
+            try { Thread.sleep(backoffMs); } catch (InterruptedException ignored) {}
+            backoffMs *= 2; // exponential backoff: 2s -> 4s -> 8s
             loginResponse = RestAssured.given()
                     .baseUri(apiBaseUrl)
                     .accept(ContentType.JSON)
@@ -114,16 +129,6 @@ public class HybridE2ETest extends BaseTest {
                     .pathParam("pass", dynamicPass)
                     .when().get("/login/{user}/{pass}");
             loginStatus = loginResponse.getStatusCode();
-            if (loginStatus == 200) break;
-            System.out.println(">>> [Thread:" + Thread.currentThread().getName() + "] Login attempt " + attempt
-                    + " returned HTTP " + loginStatus
-                    + " — " + (loginStatus == 400 || loginStatus == 429
-                        ? "ParaBank rate-limited/rejected this session; retrying after " + backoffMs + "ms"
-                        : "unexpected status"));
-            if (attempt < maxLoginRetries) {
-                try { Thread.sleep(backoffMs); } catch (InterruptedException ignored) {}
-                backoffMs *= 2; // exponential backoff: 2s -> 4s -> 8s
-            }
         }
         Assert.assertEquals(loginStatus, 200,
             "API: Backend Login Failed after " + maxLoginRetries + " attempts (HTTP " + loginStatus + "). "
