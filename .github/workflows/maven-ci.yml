@@ -11,6 +11,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    env:
+      # Expose secret presence as a plain env var so it can be checked in if: expressions.
+      # secrets.* cannot be read directly in if: conditions; this is the recommended pattern.
+      SONAR_TOKEN_SET: ${{ secrets.SONAR_TOKEN != '' }}
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -50,7 +55,7 @@ jobs:
         run: mvn clean verify "-DsuiteXmlFile=full-suite.xml"
 
       - name: Analyze with SonarCloud
-        if: ${{ secrets.SONAR_TOKEN != '' }}
+        if: env.SONAR_TOKEN_SET == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -62,11 +67,11 @@ jobs:
         continue-on-error: true
 
       - name: SonarCloud skipped notice
-        if: ${{ secrets.SONAR_TOKEN == '' }}
-        run: echo "Sonar skipped — SONAR_TOKEN secret not configured in this repository."
+        if: env.SONAR_TOKEN_SET != 'true'
+        run: echo "Sonar skipped - SONAR_TOKEN secret not configured in this repository."
 
       - name: SonarCloud Quality Gate Check
-        if: ${{ secrets.SONAR_TOKEN != '' }}
+        if: env.SONAR_TOKEN_SET == 'true'
         uses: sonarsource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
         with:
