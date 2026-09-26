@@ -56,3 +56,16 @@ generated-code/
 Thumbs.db
 /.apt_generated/
 /.apt_generated_tests/
+
+# ==========================
+# Debug & Scratch Files
+# ==========================
+*.bat
+*.html
+cookies.txt
+*_output.txt
+*_out.txt
+mvn_*.txt
+java_*.txt
+test_*.txt
+version.txt

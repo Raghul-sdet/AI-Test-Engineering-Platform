@@ -1,6 +1,0 @@
-﻿
-CommandType     Name                                               Version    Source                                   
------------     ----                                               -------    ------                                   
-Application     java.exe                                           25.0.2.0   C:\Program Files\Common Files\Oracle\J...
-
-
