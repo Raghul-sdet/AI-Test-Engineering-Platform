@@ -9,7 +9,11 @@ public class CreateCustomerTest extends BaseApiTest {
 
     @Test(description = "Verify GET Login API for demo customer")
     public void verifyCreateCustomer() {
-        Response response = executeRequest("createCustomer", null);
+        java.util.Map<String, Object> params = java.util.Map.of(
+            "username", profileLoader.getTestData("defaultUsername"),
+            "password", profileLoader.getTestData("defaultPassword")
+        );
+        Response response = executeRequest("createCustomer", params);
         
         response.then().spec(responseSpec);
         Assert.assertEquals(response.getStatusCode(), 200, "Expected HTTP 200 OK");

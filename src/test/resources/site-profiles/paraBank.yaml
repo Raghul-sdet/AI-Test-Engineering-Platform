@@ -71,7 +71,7 @@ locators:
 apiEndpoints:
   createCustomer:
     method: GET
-    path: /login/john/demo
+    path: /login/{username}/{password}
     paramStyle: path
     successField: id
   transferFunds:
