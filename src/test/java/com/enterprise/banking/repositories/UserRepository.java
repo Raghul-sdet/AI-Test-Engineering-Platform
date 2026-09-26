@@ -26,7 +26,7 @@ public class UserRepository {
             "jdbc:h2:file:./target/h2db/test_users_db;AUTO_SERVER=TRUE";
 
     private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = "";
+    private static final String DB_PASSWORD = System.getProperty("DB_PASSWORD", System.getenv().getOrDefault("DB_PASSWORD", "TestDbP@ss123!"));
 
     /**
      * Auto-Healing Logic: Creates table with DEFAULT values for Parabank testing.

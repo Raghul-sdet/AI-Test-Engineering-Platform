@@ -27,7 +27,7 @@ public class AiDatabasePersister {
     // Enterprise H2 Database connection coordinates pointing to the build target directory.
     private static final String DB_URL = "jdbc:h2:file:./target/db/ai_qa_framework;AUTO_SERVER=TRUE";
     private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = "";
+    private static final String DB_PASSWORD = System.getProperty("DB_PASSWORD", System.getenv().getOrDefault("DB_PASSWORD", "TestDbP@ss123!"));
 
     /**
      * Constructs the database persister and initializes the core schema required for Phase 1.

@@ -10,7 +10,7 @@ public class DatabaseManager {
     // AUTO_SERVER=TRUE allows seamless parallel thread access
     private static final String DB_URL = "jdbc:h2:file:./target/h2db/automation_db;AUTO_SERVER=TRUE";
     private static final String USER = "sa";
-    private static final String PASS = "";
+    private static final String PASS = System.getProperty("DB_PASSWORD", System.getenv().getOrDefault("DB_PASSWORD", "TestDbP@ss123!"));
 
     /**
      * Provides a fresh, isolated database connection for the current thread.

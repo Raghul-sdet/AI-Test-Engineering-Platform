@@ -22,13 +22,32 @@ public class H2DataProvider {
                 UserRepository.getLatestUserForTest() 
             };
         } catch (RuntimeException e) {
-            // Fallback: If no user exists in H2 (first run or empty DB),
-            // use ParaBank's built-in demo credentials to prevent cascade failures
-            System.out.println("WARNING: No user found in H2 DB. Using ParaBank default demo credentials.");
-            String todayDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
-            return new Object[][] {
-                new String[] { "john", "demo", "10", "10", todayDate, "12345" }
-            };
+            // Fallback/Seed logic
+            System.out.println("WARNING: No user found in H2 DB. Seeding default user 'john'.");
+            try {
+                // Check if john already exists to be idempotent
+                boolean exists = false;
+                String dbPassword = System.getProperty("DB_PASSWORD", System.getenv().getOrDefault("DB_PASSWORD", "TestDbP@ss123!"));
+                try (java.sql.Connection conn = java.sql.DriverManager.getConnection("jdbc:h2:file:./target/h2db/test_users_db;AUTO_SERVER=TRUE", "sa", dbPassword);
+                     java.sql.PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM test_users WHERE username='john'");
+                     java.sql.ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        exists = true;
+                    }
+                }
+                if (!exists) {
+                    UserRepository.saveUser("john", "demo");
+                }
+                return new Object[][] {
+                    UserRepository.getLatestUserForTest()
+                };
+            } catch (Exception ex) {
+                System.out.println("WARNING: Failed to seed or read from H2 DB. Using ParaBank default demo credentials.");
+                String todayDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
+                return new Object[][] {
+                    new String[] { "john", "demo", "10", "10", todayDate, "12345" }
+                };
+            }
         }
     }
 }
