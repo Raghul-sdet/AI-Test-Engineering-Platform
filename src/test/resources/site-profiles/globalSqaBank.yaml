@@ -1,0 +1,31 @@
+siteName: GlobalSQA Banking Project
+baseUrl: https://www.globalsqa.com/angularJs-protractor/BankingProject/#/customer
+locators:
+  login:
+    usernameField: id=userSelect
+    passwordField: xpath=//body
+    submitButton: xpath=//button[@type='submit']
+    accountOverviewHeader: css=span.fontBig
+    logoutLink: css=button.logout
+
+testData:
+  defaultUsername: "Harry Potter"
+
+workflows:
+  login:
+    steps:
+      - action: navigate
+        url: "${baseUrl}"
+      - action: type
+        locator: "id=userSelect"
+        inputType: select
+        value: "${testData.defaultUsername}"
+      - action: type
+        locator: ""
+        inputType: text
+        value: "${testData.defaultPassword}"
+        optional: true
+      - action: click
+        locator: "xpath=//button[@type='submit']"
+      - action: assertVisible
+        locator: "css=span.fontBig"

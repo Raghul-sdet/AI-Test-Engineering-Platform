@@ -17,7 +17,7 @@ public class AccountOverviewTest extends BaseTest {
 
         // Step 1: Login (Parabank automatically redirects to Overview upon success)
         // FIX: Replaced 'driver' with 'getDriver()' for Thread-Safe Parallel Execution
-        LoginPage loginPage = new LoginPage(getDriver());
+        LoginPage loginPage = new LoginPage(getDriver(), profileLoader);
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
@@ -25,7 +25,7 @@ public class AccountOverviewTest extends BaseTest {
 
         // Step 2: Initialize Overview Page 
         // FIX: Replaced 'driver' with 'getDriver()'
-        AccountOverviewPage overviewPage = new AccountOverviewPage(getDriver());
+        AccountOverviewPage overviewPage = new AccountOverviewPage(getDriver(), profileLoader);
 
         // Step 3: Validate Balance
         String balance = overviewPage.getAccountBalance();

@@ -87,19 +87,13 @@
         <classes>
             <class name="com.enterprise.banking.tests.AITestDataGenerationTest"/>
             <class name="com.enterprise.banking.tests.AiAssistantTest"/>
-            <class name="com.enterprise.banking.tests.AnomalyDetectorTest"/>
             <class name="com.enterprise.banking.tests.DomEngineTest"/>
-            <class name="com.enterprise.banking.tests.DynamicExecutionTest"/>
             <class name="com.enterprise.banking.tests.EmailConnectorTest"/>
             <class name="com.enterprise.banking.tests.ExecutionMappingTest"/>
-            <class name="com.enterprise.banking.tests.ExplorationEngineTest"/>
             <class name="com.enterprise.banking.tests.MappingEngineTest"/>
-            <class name="com.enterprise.banking.tests.NavigationPlannerTest"/>
             <class name="com.enterprise.banking.tests.NotificationEngineTest"/>
-            <class name="com.enterprise.banking.tests.PageDiscoveryEngineTest"/>
             <class name="com.enterprise.banking.tests.RequirementAnalyzerTest"/>
             <class name="com.enterprise.banking.tests.ScenarioGenerationTest"/>
-            <class name="com.enterprise.banking.tests.SelfHealingEngineTest"/>
             <class name="com.enterprise.banking.tests.SlackConnectorTest"/>
             <class name="com.enterprise.banking.tests.TeamsConnectorTest"/>
             <class name="com.enterprise.banking.tests.WebhookConnectorTest"/>

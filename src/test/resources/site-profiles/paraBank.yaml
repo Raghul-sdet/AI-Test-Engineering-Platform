@@ -1,0 +1,280 @@
+siteName: ParaBank
+baseUrl: https://parabank.parasoft.com/parabank
+apiBaseUrl: https://parabank.parasoft.com/parabank/services/bank
+
+authentication:
+  type: form-login
+  credentialsRef: default-user
+
+locators:
+  login:
+    usernameField: "name=username"
+    passwordField: "name=password"
+    submitButton: "xpath=//input[@value='Log In']"
+    accountOverviewHeader: "xpath=//h1[@class='title']"
+    errorMessage: "className=error"
+    logoutLink: "linkText=Log Out"
+  transferFunds:
+    fromAccountDropdown: "id=fromAccountId"
+    toAccountDropdown: "id=toAccountId"
+    amountField: "id=amount"
+    submitButton: "xpath=//input[@value='Transfer']"
+    linkTransferFunds: "linkText=Transfer Funds"
+    textSuccessHeader: "xpath=//div[@id='showResult']//h1[@class='title']"
+    textAmountResult: "id=amountResult"
+    btnLogout: "linkText=Log Out"
+    fromAccountOptions: "xpath=//select[@id='fromAccountId']/option"
+    toAccountOptions: "xpath=//select[@id='toAccountId']/option"
+  registration:
+    linkRegister: "linkText=Register"
+    inputFirstName: "id=customer.firstName"
+    inputLastName: "id=customer.lastName"
+    inputStreet: "id=customer.address.street"
+    inputCity: "id=customer.address.city"
+    inputState: "id=customer.address.state"
+    inputZipCode: "id=customer.address.zipCode"
+    inputPhoneNumber: "id=customer.phoneNumber"
+    inputSsn: "id=customer.ssn"
+    inputUsername: "id=customer.username"
+    inputPassword: "id=customer.password"
+    inputConfirmPassword: "id=repeatedPassword"
+    btnRegisterSubmit: "xpath=//input[@value='Register']"
+    textSuccessHeader: "xpath=//div[@id='rightPanel']/h1"
+  accountOverview:
+    pageHeader: "xpath=//h1[contains(text(),'Accounts Overview')]"
+    textAccountBalance: "xpath=//*[@id='accountTable']//tbody/tr[1]/td[2]"
+    btnLogout: "linkText=Log Out"
+    linkAccountsOverview: "linkText=Accounts Overview"
+    accountLink: "xpath=//a[text()='%s']"
+    balanceData: "xpath=//a[text()='%s']/../following-sibling::td[1]"
+  openAccount:
+    linkOpenNewAccount: "linkText=Open New Account"
+    dropdownAccountType: "id=type"
+    dropdownFromAccountId: "id=fromAccountId"
+    btnSubmitOpenAccount: "xpath=//input[@value='Open New Account' or @type='submit']"
+    textNewAccountId: "id=newAccountId"
+    btnLogout: "linkText=Log Out"
+    fromAccountOption1: "xpath=//select[@id='fromAccountId']/option[1]"
+  findTransactions:
+    linkFindTransactions: "linkText=Find Transactions"
+    containerForm: "id=formContainer"
+    inputAmount: "id=amount"
+    btnFindByAmount: "id=findByAmount"
+    inputDate: "id=transactionDate"
+    btnFindByDate: "id=findByDate"
+    inputTransactionId: "id=transactionId"
+    btnFindById: "id=findById"
+    containerResult: "id=resultContainer"
+    rowsTransactionResults: "xpath=//tbody[@id='transactionBody']/tr"
+    btnLogout: "linkText=Log Out"
+
+apiEndpoints:
+  createCustomer:
+    method: GET
+    path: /login/john/demo
+    paramStyle: path
+    successField: id
+  transferFunds:
+    method: POST
+    path: /transfer
+    paramStyle: query
+    successField: Successfully transferred
+  getCustomerDetails:
+    method: GET
+    path: /customers/{customerId}
+    paramStyle: path
+    successField: id
+  openAccount:
+    method: POST
+    path: /createAccount
+    paramStyle: query
+    successField: id
+  getTransactionHistory:
+    method: GET
+    path: /accounts/{accountId}/transactions
+    paramStyle: path
+    successField: id
+
+testData:
+  defaultCustomerId: "12212"
+  defaultAccountId: "12345"
+  transferToAccountId: "12456"
+  transferAmount: "150.00"
+  defaultUsername: "john"
+  defaultPassword: "demo"
+
+workflows:
+  login:
+    steps:
+      - action: navigate
+        url: "${baseUrl}/index.htm"
+      - action: type
+        locator: "name=username"
+        inputType: text
+        value: "${testData.defaultUsername}"
+      - action: type
+        locator: "name=password"
+        inputType: text
+        value: "${testData.defaultPassword}"
+        optional: true
+      - action: click
+        locator: "xpath=//input[@value='Log In']"
+      - action: assertVisible
+        locator: "xpath=//h1[@class='title']"
+  transferFunds:
+    steps:
+      - action: navigate
+        url: "${baseUrl}/index.htm"
+      - action: type
+        locator: "name=username"
+        inputType: text
+        value: "${testData.defaultUsername}"
+      - action: type
+        locator: "name=password"
+        inputType: text
+        value: "${testData.defaultPassword}"
+      - action: click
+        locator: "xpath=//input[@value='Log In']"
+      - action: click
+        locator: "linkText=Transfer Funds"
+      - action: type
+        locator: "id=amount"
+        inputType: text
+        value: "${testData.transferAmount}"
+      - action: type
+        locator: "id=fromAccountId"
+        inputType: select
+        value: "${testData.defaultAccountId}"
+      - action: type
+        locator: "id=toAccountId"
+        inputType: select
+        value: "${testData.transferToAccountId}"
+      - action: click
+        locator: "xpath=//input[@value='Transfer']"
+      - action: assertTextContains
+        locator: "xpath=//div[@id='showResult']//h1[@class='title']"
+        value: "Transfer Complete!"
+  registration:
+    steps:
+      - action: navigate
+        url: "${baseUrl}/index.htm"
+      - action: click
+        locator: "linkText=Register"
+      - action: type
+        locator: "id=customer.firstName"
+        inputType: text
+        value: "QA"
+      - action: type
+        locator: "id=customer.lastName"
+        inputType: text
+        value: "Automation"
+      - action: type
+        locator: "id=customer.address.street"
+        inputType: text
+        value: "123 Testing Blvd"
+      - action: type
+        locator: "id=customer.address.city"
+        inputType: text
+        value: "Tech City"
+      - action: type
+        locator: "id=customer.address.state"
+        inputType: text
+        value: "CA"
+      - action: type
+        locator: "id=customer.address.zipCode"
+        inputType: text
+        value: "90210"
+      - action: type
+        locator: "id=customer.phoneNumber"
+        inputType: text
+        value: "555-0199"
+      - action: type
+        locator: "id=customer.ssn"
+        inputType: text
+        value: "000-11-2222"
+      - action: type
+        locator: "id=customer.username"
+        inputType: text
+        value: "newuser123"
+      - action: type
+        locator: "id=customer.password"
+        inputType: text
+        value: "newpass123"
+      - action: type
+        locator: "id=repeatedPassword"
+        inputType: text
+        value: "newpass123"
+      - action: click
+        locator: "xpath=//input[@value='Register']"
+      - action: assertVisible
+        locator: "xpath=//div[@id='rightPanel']/h1"
+  accountOverview:
+    steps:
+      - action: navigate
+        url: "${baseUrl}/index.htm"
+      - action: type
+        locator: "name=username"
+        inputType: text
+        value: "${testData.defaultUsername}"
+      - action: type
+        locator: "name=password"
+        inputType: text
+        value: "${testData.defaultPassword}"
+      - action: click
+        locator: "xpath=//input[@value='Log In']"
+      - action: click
+        locator: "linkText=Accounts Overview"
+      - action: assertVisible
+        locator: "xpath=//h1[contains(text(),'Accounts Overview')]"
+  openAccount:
+    steps:
+      - action: navigate
+        url: "${baseUrl}/index.htm"
+      - action: type
+        locator: "name=username"
+        inputType: text
+        value: "${testData.defaultUsername}"
+      - action: type
+        locator: "name=password"
+        inputType: text
+        value: "${testData.defaultPassword}"
+      - action: click
+        locator: "xpath=//input[@value='Log In']"
+      - action: click
+        locator: "linkText=Open New Account"
+      - action: type
+        locator: "id=type"
+        inputType: select
+        value: "CHECKING"
+      - action: type
+        locator: "id=fromAccountId"
+        inputType: select
+        value: "${testData.defaultAccountId}"
+      - action: click
+        locator: "xpath=//input[@value='Open New Account' or @type='submit']"
+      - action: assertVisible
+        locator: "id=newAccountId"
+  findTransactions:
+    steps:
+      - action: navigate
+        url: "${baseUrl}/index.htm"
+      - action: type
+        locator: "name=username"
+        inputType: text
+        value: "${testData.defaultUsername}"
+      - action: type
+        locator: "name=password"
+        inputType: text
+        value: "${testData.defaultPassword}"
+      - action: click
+        locator: "xpath=//input[@value='Log In']"
+      - action: click
+        locator: "linkText=Find Transactions"
+      - action: type
+        locator: "id=amount"
+        inputType: text
+        value: "${testData.transferAmount}"
+      - action: click
+        locator: "id=findByAmount"
+      - action: assertVisible
+        locator: "id=resultContainer"

@@ -16,4 +16,10 @@
         </classes>
     </test>
     
+    <test name="ConfigurationTests">
+        <classes>
+            <class name="com.enterprise.banking.config.SiteProfileLoaderTest"/>
+        </classes>
+    </test>
+
 </suite>

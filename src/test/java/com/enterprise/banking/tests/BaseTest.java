@@ -1,7 +1,6 @@
 package com.enterprise.banking.tests;
 
 import com.enterprise.banking.repositories.UserRepository;
-import com.enterprise.banking.utils.ConfigReader;
 import com.enterprise.banking.utils.DriverManager;
 
 import org.openqa.selenium.WebDriver;
@@ -13,6 +12,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import java.time.Duration;
+import com.enterprise.banking.config.SiteProfileLoader;
 
 /**
  * Enterprise Base Test
@@ -30,6 +30,7 @@ public class BaseTest {
             LoggerFactory.getLogger(BaseTest.class);
 
     protected WebDriver driver;
+    protected SiteProfileLoader profileLoader = new SiteProfileLoader();
 
     /**
      * Runs once before the entire suite.
@@ -70,17 +71,7 @@ public class BaseTest {
 
         driver.manage().window().maximize();
 
-        // Reads from config.properties (key: uiBaseUrl, falls back to baseUrl).
-        // This is the single switch for "which website does this framework test" -
-        // point it at a different site by changing config.properties, nothing else.
-        String targetUrl = ConfigReader.getProperty("uiBaseUrl");
-        if (targetUrl == null || targetUrl.isBlank()) {
-            targetUrl = ConfigReader.getProperty("baseUrl");
-        }
-        if (targetUrl == null || targetUrl.isBlank()) {
-            throw new IllegalStateException(
-                "No target site configured. Set 'uiBaseUrl' (or 'baseUrl') in src/test/resources/config.properties.");
-        }
+        String targetUrl = profileLoader.getBaseUrl();
         driver.get(targetUrl);
 
         LOGGER.info("Application launched successfully.");

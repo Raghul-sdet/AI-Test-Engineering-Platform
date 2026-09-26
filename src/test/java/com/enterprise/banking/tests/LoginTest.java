@@ -15,7 +15,7 @@ public class LoginTest extends BaseTest {
         System.out.println(">>> Executing Login Test for user: " + username);
         
         // Ensure thread safety using getDriver()
-        LoginPage loginPage = new LoginPage(getDriver());
+        LoginPage loginPage = new LoginPage(getDriver(), profileLoader);
         
         // Execute login
         loginPage.login(username, password);

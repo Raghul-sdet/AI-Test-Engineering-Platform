@@ -19,7 +19,7 @@ public class RegistrationTest extends BaseTest {
         System.out.println(">>> Attempting registration with Username: " + newUsername);
 
         // Step 2: Initialize Page Object
-        RegistrationPage registrationPage = new RegistrationPage(getDriver());
+        RegistrationPage registrationPage = new RegistrationPage(getDriver(), profileLoader);
 
         // Step 3: Execute Registration UI Workflow
         registrationPage.navigateToRegistration();

@@ -17,7 +17,7 @@ public class OpenAccountTest extends BaseTest {
 
         // Step 1: Login
         // FIX: Replaced 'driver' with 'getDriver()' for Thread-Safety
-        LoginPage loginPage = new LoginPage(getDriver());
+        LoginPage loginPage = new LoginPage(getDriver(), profileLoader);
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
@@ -25,7 +25,7 @@ public class OpenAccountTest extends BaseTest {
 
         // Step 2: Initialize Page Object
         // FIX: Replaced 'driver' with 'getDriver()'
-        OpenAccountPage openAccountPage = new OpenAccountPage(getDriver());
+        OpenAccountPage openAccountPage = new OpenAccountPage(getDriver(), profileLoader);
 
         // Step 3: Execute Open Account Workflow
         openAccountPage.navigateToOpenNewAccount();

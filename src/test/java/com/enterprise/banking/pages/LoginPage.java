@@ -2,42 +2,38 @@ package com.enterprise.banking.pages;
 
 import java.time.Duration;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.enterprise.banking.config.SiteProfileLoader;
+import com.enterprise.banking.utils.LocatorParser;
+
 public class LoginPage {
 
     private WebDriver driver;
     private WebDriverWait wait;
-
-    // Locators
-    private By usernameField = By.name("username");
-    private By passwordField = By.name("password");
-    private By loginButton = By.xpath("//input[@value='Log In']");
-    private By accountOverviewHeader = By.xpath("//h1[@class='title']");
-    private By errorMessage = By.className("error");
-    private By logoutLink = By.linkText("Log Out");
+    private SiteProfileLoader profileLoader;
 
     // Constructor
-    public LoginPage(WebDriver driver) {
+    public LoginPage(WebDriver driver, SiteProfileLoader profileLoader) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        this.profileLoader = profileLoader;
     }
 
     // Actions
     public void enterUsername(String username) {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(usernameField)).sendKeys(username);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(LocatorParser.parseLocator(profileLoader.getLocator("login", "usernameField")))).sendKeys(username);
     }
 
     public void enterPassword(String password) {
-        driver.findElement(passwordField).sendKeys(password);
+        driver.findElement(LocatorParser.parseLocator(profileLoader.getLocator("login", "passwordField"))).sendKeys(password);
     }
 
     public void clickLogin() {
-        driver.findElement(loginButton).click();
+        driver.findElement(LocatorParser.parseLocator(profileLoader.getLocator("login", "submitButton"))).click();
     }
 
     public void loginToBanking(String username, String password) {
@@ -53,7 +49,7 @@ public class LoginPage {
 
     // Added for Hybrid E2E Test Compatibility
     public void logout() {
-        wait.until(ExpectedConditions.elementToBeClickable(logoutLink)).click();
+        wait.until(ExpectedConditions.elementToBeClickable(LocatorParser.parseLocator(profileLoader.getLocator("login", "logoutLink")))).click();
     }
 
     /**
@@ -62,13 +58,13 @@ public class LoginPage {
      * Call this after clickLogin() before navigating to any other page.
      */
     public void waitForLoginSuccess() {
-        wait.until(ExpectedConditions.elementToBeClickable(logoutLink));
+        wait.until(ExpectedConditions.elementToBeClickable(LocatorParser.parseLocator(profileLoader.getLocator("login", "logoutLink"))));
     }
 
     // Verify successful login
     public boolean isOverviewDisplayed() {
         try {
-            WebElement header = wait.until(ExpectedConditions.visibilityOfElementLocated(accountOverviewHeader));
+            WebElement header = wait.until(ExpectedConditions.visibilityOfElementLocated(LocatorParser.parseLocator(profileLoader.getLocator("login", "accountOverviewHeader"))));
             return header.isDisplayed();
         } catch (Exception e) {
             return false;
@@ -78,7 +74,7 @@ public class LoginPage {
     // Verify invalid login
     public String getErrorMessage() {
         try {
-            WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(errorMessage));
+            WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(LocatorParser.parseLocator(profileLoader.getLocator("login", "errorMessage"))));
             return error.getText();
         } catch (Exception e) {
             return "";

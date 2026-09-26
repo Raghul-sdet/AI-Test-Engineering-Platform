@@ -1,70 +1,51 @@
 package com.enterprise.banking.pages;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import com.enterprise.banking.config.SiteProfileLoader;
+import com.enterprise.banking.utils.LocatorParser;
 
 public class OpenAccountPage {
 
+    private WebDriver driver;
     private WebDriverWait wait;
-
-    // --- Locators ---
-    @FindBy(linkText = "Open New Account")
-    private WebElement linkOpenNewAccount;
-
-    @FindBy(id = "type")
-    private WebElement dropdownAccountType;
-
-    @FindBy(id = "fromAccountId")
-    private WebElement dropdownFromAccountId;
-
-    @FindBy(xpath = "//input[@value='Open New Account' or @type='submit']")
-    private WebElement btnSubmitOpenAccount;
-
-    // The ultimate anchor for our AJAX synchronization
-    @FindBy(id = "newAccountId")
-    private WebElement textNewAccountId;
-
-    @FindBy(linkText = "Log Out")
-    private WebElement btnLogout;
+    private SiteProfileLoader profileLoader;
 
     // Constructor
-    public OpenAccountPage(WebDriver driver) {
+    public OpenAccountPage(WebDriver driver, SiteProfileLoader profileLoader) {
+        this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        PageFactory.initElements(driver, this);
+        this.profileLoader = profileLoader;
     }
 
     // --- Methods ---
     public void navigateToOpenNewAccount() {
-        wait.until(ExpectedConditions.elementToBeClickable(linkOpenNewAccount)).click();
+        wait.until(ExpectedConditions.elementToBeClickable(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "linkOpenNewAccount")))).click();
     }
 
     public void selectAccountType(String accountType) {
-        wait.until(ExpectedConditions.visibilityOf(dropdownAccountType));
-        Select typeSelect = new Select(dropdownAccountType);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "dropdownAccountType"))));
+        Select typeSelect = new Select(driver.findElement(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "dropdownAccountType"))));
         typeSelect.selectByVisibleText(accountType);
     }
 
     public void selectFromAccountByIndex(int index) {
-        wait.until(ExpectedConditions.visibilityOf(dropdownFromAccountId));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "dropdownFromAccountId"))));
         
         // Explicit Wait: Force script to pause until the backend loads at least one account option
         wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.xpath("//select[@id='fromAccountId']/option[1]")));
+                LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "fromAccountOption1"))));
                 
-        Select fromAccountSelect = new Select(dropdownFromAccountId);
+        Select fromAccountSelect = new Select(driver.findElement(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "dropdownFromAccountId"))));
         fromAccountSelect.selectByIndex(index);
     }
 
     public void clickSubmit() {
-        wait.until(ExpectedConditions.elementToBeClickable(btnSubmitOpenAccount)).click();
+        wait.until(ExpectedConditions.elementToBeClickable(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "btnSubmitOpenAccount")))).click();
     }
 
     public boolean isAccountOpenedSuccessfully() {
@@ -72,7 +53,7 @@ public class OpenAccountPage {
             // BULLETPROOF SYNC: If the unique account ID physically appears in the DOM,
             // it is the absolute proof that the account was created successfully.
             // We bypass the flaky header text extraction entirely.
-            wait.until(ExpectedConditions.visibilityOf(textNewAccountId));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "textNewAccountId"))));
             return true; 
         } catch (Exception e) {
             return false;
@@ -80,10 +61,10 @@ public class OpenAccountPage {
     }
 
     public String getGeneratedAccountNumber() {
-        return textNewAccountId.getText();
+        return driver.findElement(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "textNewAccountId"))).getText();
     }
 
     public void clickLogout() {
-        wait.until(ExpectedConditions.elementToBeClickable(btnLogout)).click();
+        wait.until(ExpectedConditions.elementToBeClickable(LocatorParser.parseLocator(profileLoader.getLocator("openAccount", "btnLogout")))).click();
     }
 }

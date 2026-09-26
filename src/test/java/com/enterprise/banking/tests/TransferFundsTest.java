@@ -17,7 +17,7 @@ public class TransferFundsTest extends BaseTest {
 
         // Step 1: Login with Database Credentials
         // FIX: Replaced 'driver' with 'getDriver()' for Thread-Safety
-        LoginPage loginPage = new LoginPage(getDriver());
+        LoginPage loginPage = new LoginPage(getDriver(), profileLoader);
         loginPage.enterUsername(username);
         loginPage.enterPassword(password);
         loginPage.clickLogin();
@@ -25,7 +25,7 @@ public class TransferFundsTest extends BaseTest {
 
         // Step 2: Initialize Page Object
         // FIX: Replaced 'driver' with 'getDriver()'
-        TransferFundsPage transferPage = new TransferFundsPage(getDriver());
+        TransferFundsPage transferPage = new TransferFundsPage(getDriver(), profileLoader);
 
         // Step 3: Execute Transfer Workflow
         transferPage.navigateToTransferFunds();
