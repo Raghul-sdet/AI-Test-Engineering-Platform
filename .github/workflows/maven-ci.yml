@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload Surefire Test Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: surefire-reports
           path: target/surefire-reports/
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload Allure Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: allure-results
           path: target/allure-results
@@ -98,7 +98,7 @@ jobs:
 
       - name: Upload Excel Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: automation-reports
           path: target/reports/*.xlsx
